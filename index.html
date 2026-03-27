@@ -359,7 +359,7 @@
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.12
+// バージョン: v3.13
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -546,7 +546,8 @@ function selectTime(el, timeStr) {
   const ph = String(Math.floor(nextMins / 60)).padStart(2, "0");
   const pm = String(nextMins % 60).padStart(2, "0");
   const previewSlot = document.querySelector(`.time-slot[data-time="${ph}:${pm}"]`);
-  if (previewSlot && !previewSlot.classList.contains("booked") && !previewSlot.classList.contains("blocked")) {
+  if (previewSlot) {
+    // 予約済み・施術中に関わらず必ず紺色で「予約」表示
     previewSlot.classList.add("selected-next");
     previewSlot.dataset.preview = "1";
   }
