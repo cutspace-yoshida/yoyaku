@@ -359,7 +359,7 @@
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.14
+// バージョン: v3.15
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -441,7 +441,7 @@ function generateTimeSlots(dateStr) {
     const [bh, bm] = bt.split(":").map(Number);
     let t = bh * 60 + bm + slotMinutes;
     const endBlock = bh * 60 + bm + serviceMins;
-    while (t <= endBlock) {
+    while (t < endBlock) {
       const bh2 = String(Math.floor(t / 60)).padStart(2, "0");
       const bm2 = String(t % 60).padStart(2, "0");
       blockedTimes.add(`${bh2}:${bm2}`);
