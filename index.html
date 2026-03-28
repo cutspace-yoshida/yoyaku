@@ -78,8 +78,8 @@
   .time-slot.blocked { background: #fdecea; color: #c0392b; cursor: not-allowed; border-color: #f1948a; }
   .time-slot.blocked::after { content: "予約"; font-size: 0.62rem; display: block; color: #c0392b; margin-top: 1px; }
   /* 選択中の次枠（自分の予約で埋まる枠）*/
-  .time-slot.selected-next { background: var(--primary); border-color: var(--primary); color: white; cursor: not-allowed; opacity: 0.65; }
-  .time-slot.selected-next::after { content: "予約"; font-size: 0.62rem; display: block; color: rgba(255,255,255,0.85); margin-top: 1px; }
+  .time-slot.selected-next { background: var(--primary) !important; border-color: var(--primary) !important; color: white !important; cursor: not-allowed; opacity: 0.65; }
+  .time-slot.selected-next::after { content: "予約" !important; font-size: 0.62rem; display: block; color: rgba(255,255,255,0.85) !important; margin-top: 1px; }
 
   /* 凡例 */
   .slot-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
@@ -359,7 +359,7 @@
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.13
+// バージョン: v3.14
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -538,6 +538,7 @@ function selectTime(el, timeStr) {
   el.classList.add("selected");
   selectedTime = timeStr;
   document.getElementById("err-time").style.display = "none";
+  document.getElementById("err-time").textContent = "時間を選択してください";
 
   // 選択した時間の次の1枠のみ「予約」でプレビュー（施術中につき予約不可）
   const { slotMinutes } = SHOP_CONFIG;
@@ -598,6 +599,16 @@ function goToConfirm() {
       const errDate = document.getElementById("err-date");
       errDate.textContent = "定休日は予約できません";
       errDate.style.display = "block";
+      valid = false;
+    }
+  }
+
+  // 選択した時間が予約済み・施術中でないかチェック
+  if (selectedTime) {
+    const selEl = document.querySelector(`.time-slot[data-time="${selectedTime}"]`);
+    if (selEl && (selEl.classList.contains("booked") || selEl.classList.contains("blocked"))) {
+      document.getElementById("err-time").textContent = "その時間はすでに予約が入っています。別の時間を選んでください。";
+      document.getElementById("err-time").style.display = "block";
       valid = false;
     }
   }
