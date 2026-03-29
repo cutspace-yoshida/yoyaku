@@ -377,14 +377,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.18</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.19</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.18
+// バージョン: v3.19
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -442,6 +442,24 @@ function saveReservation(r) {
 // 時間スロット生成
 // ============================================================
 let selectedTime = "";
+// メニューごとの施術枠数（スロット数）
+const MENU_SLOTS = {
+  'カットセット':       2,   // 60分（2枠）
+  '丸刈りセット':       2,   // 60分（2枠）
+  'カットのみ':         2,   // 60分（2枠）
+  'カラーカットセット': 4,   // 120分（4枠）
+  'パーマカットセット': 5,   // 150分（5枠）
+  '特殊パーマ':         7,   // 210分（7枠）
+  '顔そり':             1,   // 30分（1枠）
+  'その他・相談':       2,   // 60分（2枠）デフォルト
+};
+
+// 現在選択中のメニューの施術枠数を返す（未選択時は最大7枠）
+function getServiceSlots() {
+  if (!selectedMenu) return 2; // 未選択時は標準2枠
+  return MENU_SLOTS[selectedMenu] || 2;
+}
+
 let selectedMenu = "";
 
 function generateTimeSlots(dateStr) {
@@ -461,11 +479,14 @@ function generateTimeSlots(dateStr) {
   const bookedTimes = new Set(reservations.map(r => r.time));
 
   // ブロックされる時間帯（予約済み + 施術中）
+  // 既存予約のメニューから枠数を算出してブロック
   const blockedTimes = new Set();
-  bookedTimes.forEach(bt => {
+  reservations.forEach(r => {
+    const bt = r.time;
+    const menuSlots = MENU_SLOTS[r.menu] || 2;
     const [bh, bm] = bt.split(":").map(Number);
     let t = bh * 60 + bm + slotMinutes;
-    const endBlock = bh * 60 + bm + serviceMins;
+    const endBlock = bh * 60 + bm + menuSlots * slotMinutes;
     while (t < endBlock) {
       const bh2 = String(Math.floor(t / 60)).padStart(2, "0");
       const bm2 = String(t % 60).padStart(2, "0");
@@ -508,15 +529,23 @@ function generateTimeSlots(dateStr) {
     if (status === "ok") {
       el.textContent = timeStr;
       el.onclick = () => {
-        // 次の枠がbooked/blockedかチェック（選択すると施術が重なる）
+        // 選択メニューの施術枠数分チェック（重複防止）
         const { slotMinutes } = SHOP_CONFIG;
+        const serviceSlots = getServiceSlots();
         const [sh, sm] = timeStr.split(":").map(Number);
-        const nextMins = sh * 60 + sm + slotMinutes;
-        const nh = String(Math.floor(nextMins / 60)).padStart(2, "0");
-        const nm = String(nextMins % 60).padStart(2, "0");
-        const nextSlot = document.querySelector(`.time-slot[data-time="${nh}:${nm}"]`);
-        if (nextSlot && (nextSlot.classList.contains("booked") || nextSlot.classList.contains("blocked"))) {
-          const errMsg = `${timeStr} は次の枠（${nh}:${nm}）がすでに予約済みのため選択できません。`;
+        let conflict = null;
+        for (let i = 1; i < serviceSlots; i++) {
+          const checkMins = sh * 60 + sm + slotMinutes * i;
+          const ch = String(Math.floor(checkMins / 60)).padStart(2, "0");
+          const cm = String(checkMins % 60).padStart(2, "0");
+          const checkSlot = document.querySelector(`.time-slot[data-time="${ch}:${cm}"]`);
+          if (checkSlot && (checkSlot.classList.contains("booked") || checkSlot.classList.contains("blocked"))) {
+            conflict = `${ch}:${cm}`;
+            break;
+          }
+        }
+        if (conflict) {
+          const errMsg = `${timeStr} は施術中に ${conflict} の予約が重なるため選択できません。`;
           document.getElementById("err-time").textContent = errMsg;
           document.getElementById("err-time").style.display = "block";
           const banner = document.getElementById("topErrorBanner");
@@ -585,17 +614,19 @@ function selectTime(el, timeStr) {
   document.getElementById("err-time").style.display = "none";
   document.getElementById("err-time").textContent = "時間を選択してください";
 
-  // 選択した時間の次の1枠のみ「予約」でプレビュー（施術中につき予約不可）
+  // 施術中枠をMENU_SLOTS分プレビュー表示（×マーク）
   const { slotMinutes } = SHOP_CONFIG;
+  const serviceSlots = getServiceSlots();
   const [sh, sm] = timeStr.split(":").map(Number);
-  const nextMins = sh * 60 + sm + slotMinutes;
-  const ph = String(Math.floor(nextMins / 60)).padStart(2, "0");
-  const pm = String(nextMins % 60).padStart(2, "0");
-  const previewSlot = document.querySelector(`.time-slot[data-time="${ph}:${pm}"]`);
-  if (previewSlot) {
-    // 予約済み・施術中に関わらず必ず紺色で「予約」表示
-    previewSlot.classList.add("selected-next");
-    previewSlot.dataset.preview = "1";
+  for (let i = 1; i < serviceSlots; i++) {
+    const previewMins = sh * 60 + sm + slotMinutes * i;
+    const ph = String(Math.floor(previewMins / 60)).padStart(2, "0");
+    const pm = String(previewMins % 60).padStart(2, "0");
+    const previewSlot = document.querySelector(`.time-slot[data-time="${ph}:${pm}"]`);
+    if (previewSlot) {
+      previewSlot.classList.add("selected-next");
+      previewSlot.dataset.preview = "1";
+    }
   }
 }
 
@@ -607,6 +638,15 @@ function selectMenu(el, menu) {
   el.classList.add("selected");
   selectedMenu = menu;
   document.getElementById("err-menu").style.display = "none";
+  // メニュー変更時にスロット表示を再生成（施術時間が変わるため）
+  const dateVal = document.getElementById("reserveDate").value;
+  if (dateVal) generateTimeSlots(dateVal);
+  // 時間選択をリセット
+  selectedTime = "";
+  document.querySelectorAll(".time-slot").forEach(s => {
+    s.classList.remove("selected", "selected-next");
+    s.removeAttribute("data-preview");
+  });
 }
 
 // ============================================================
