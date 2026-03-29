@@ -172,6 +172,7 @@
 </div>
 
 <div id="topErrorBanner" style="display:none; background:#fdecea; border-left:4px solid #e74c3c; padding:12px 16px; font-size:0.88rem; color:#c0392b; font-weight:700; text-align:center; letter-spacing:0.3px;"></div>
+<div style="background:linear-gradient(135deg,#fff8e8,#fef3c7); border-left:4px solid #f0c060; padding:12px 18px; font-size:0.82rem; color:#7a5a00; font-weight:700; text-align:center; letter-spacing:0.3px;">📞 当日のご予約はお電話にてお承りしております。お気軽にご連絡ください。<br><a href="tel:0298874213" style="color:#c07000; text-decoration:none; font-size:0.95rem; font-weight:900;">029-887-4213</a></div>
 
 <div class="main">
 
@@ -275,6 +276,7 @@
         <label class="form-label">ご希望時間 <span class="required">※必須</span>
           <span style="font-size:0.68rem; color:var(--muted); font-weight:400; margin-left:6px;">（カットセットの施術は約1時間です）</span>
         </label>
+        <div id="todayNotice" style="display:none; background:#fff8e8; border:1px solid #f0c060; border-radius:10px; padding:10px 14px; font-size:0.82rem; color:#7a5a00; font-weight:700; margin-bottom:8px;">📞 当日のご予約はお電話にてお承りしております。<br>以下は現在の予約状況のご確認のみとなります。</div>
         <div class="time-slots" id="timeSlots"></div>
         <div class="slot-legend">
           <div class="legend-item"><div class="legend-dot ok"></div>予約可</div>
@@ -377,14 +379,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.19</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.21</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.19
+// バージョン: v3.21
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -522,7 +524,8 @@ function generateTimeSlots(dateStr) {
       status = "booked";
     } else if (blockedTimes.has(timeStr)) {
       status = "blocked";
-    } else if (dateStr === today && t <= nowMins) {
+    } else if (dateStr === today) {
+      // 当日は全枠閲覧のみ（予約不可）
       status = "past";
     }
 
@@ -596,6 +599,12 @@ function onDateChange() {
     return;
   }
   warning.style.display = "none";
+  // 当日が選択されたら閲覧のみメッセージ表示
+  const todayCheck = new Date().toISOString().slice(0, 10);
+  const todayNotice = document.getElementById("todayNotice");
+  if (todayNotice) {
+    todayNotice.style.display = dateVal === todayCheck ? "block" : "none";
+  }
   generateTimeSlots(dateVal);
 }
 
@@ -657,6 +666,12 @@ function goToConfirm() {
   const name  = document.getElementById("guestName").value.trim();
   const phone = document.getElementById("guestPhone").value.trim();
   const date  = document.getElementById("reserveDate").value;
+  // 当日予約は電話のみ → 送信ブロック
+  const _todayStr = new Date().toISOString().slice(0, 10);
+  if (date === _todayStr) {
+    alert("当日のご予約はお電話にてお承りしております。\n📞 029-887-4213\nお気軽にご連絡ください。");
+    return;
+  }
 
   const checks = [
     [!name,        "err-name",  "guestName",  "お名前を入力してください"],
@@ -743,6 +758,12 @@ async function submitReservation() {
   const name  = document.getElementById("guestName").value.trim();
   const phone = document.getElementById("guestPhone").value.trim();
   const date  = document.getElementById("reserveDate").value;
+  // 当日予約は電話のみ → 送信ブロック
+  const _todayStr = new Date().toISOString().slice(0, 10);
+  if (date === _todayStr) {
+    alert("当日のご予約はお電話にてお承りしております。\n📞 029-887-4213\nお気軽にご連絡ください。");
+    return;
+  }
   const note  = document.getElementById("guestNote").value.trim();
   const submittedAt = new Date().toLocaleString("ja-JP");
 
@@ -840,6 +861,34 @@ function showAdminPage() {
 
   if (active.length === 0) rows = '<div style="text-align:center;color:#aaa;padding:20px;">現在の予約はありません</div>';
 
+  // 当日予約追加フォーム用の時間スロット生成
+  const today = new Date().toISOString().slice(0, 10);
+  let timeOpts = '';
+  for (let h = 8; h <= 18; h++) {
+    ['00','30'].forEach(m => {
+      if (h === 18 && m === '30') return;
+      const t = String(h).padStart(2,'0') + ':' + m;
+      timeOpts += '<option value="' + t + '">' + t + '</option>';
+    });
+  }
+  const menuList = ['カットセット','丸刈りセット','カットのみ','カラーカットセット','パーマカットセット','特殊パーマ','顔そり','その他・相談'];
+  const menuOpts = menuList.map(m => '<option value="' + m + '">' + m + '</option>').join('');
+
+  const addForm =
+    '<div style="margin-bottom:16px;background:#f0f9f4;border:2px solid #27ae60;border-radius:12px;padding:16px;">' +
+    '<div style="font-weight:900;color:#1a7a4a;font-size:0.95rem;margin-bottom:12px;">📞 電話・直接来店予約を追加</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
+    '<input id="adm_name" placeholder="お名前" style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.88rem;font-family:inherit;">' +
+    '<input id="adm_phone" placeholder="電話番号" type="tel" style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.88rem;font-family:inherit;">' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
+    '<input id="adm_date" type="date" value="' + today + '" style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.88rem;font-family:inherit;">' +
+    '<select id="adm_time" style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.88rem;font-family:inherit;">' + timeOpts + '</select>' +
+    '</div>' +
+    '<select id="adm_menu" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.88rem;font-family:inherit;margin-bottom:8px;">' + menuOpts + '</select>' +
+    '<button onclick="adminAddReservation()" style="width:100%;padding:10px;background:linear-gradient(135deg,#1a7a4a,#27ae60);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.9rem;font-family:inherit;">＋ 予約を追加する</button>' +
+    '</div>';
+
   const overlay = document.createElement("div");
   overlay.id = "adminOverlay";
   overlay.innerHTML =
@@ -848,8 +897,38 @@ function showAdminPage() {
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:2px solid #f0f0f0;padding-bottom:12px;">' +
     '<div style="font-size:1.1rem;font-weight:900;color:#1a2a3a;">🔐 予約管理（' + active.length + '件）</div>' +
     '<button onclick="document.getElementById(\'adminOverlay\').remove()" style="border:none;background:#eee;border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:700;">✕ 閉じる</button>' +
-    '</div>' + rows + '</div></div>';
+    '</div>' + addForm + rows + '</div></div>';
   document.body.appendChild(overlay);
+}
+
+function adminAddReservation() {
+  const name  = (document.getElementById("adm_name").value || "").trim();
+  const phone = (document.getElementById("adm_phone").value || "").trim();
+  const date  = document.getElementById("adm_date").value;
+  const time  = document.getElementById("adm_time").value;
+  const menu  = document.getElementById("adm_menu").value;
+
+  if (!name)  { alert("お名前を入力してください"); return; }
+  if (!date)  { alert("日付を入力してください"); return; }
+  if (!time)  { alert("時間を選択してください"); return; }
+  if (!menu)  { alert("メニューを選択してください"); return; }
+
+  const list = getReservations();
+  // 重複チェック
+  const dup = list.find(r => r.date === date && r.time === time && r.status !== "キャンセル");
+  if (dup) {
+    alert(date + " " + time + " はすでに予約が入っています。\n（" + dup.name + " 様）");
+    return;
+  }
+
+  const submittedAt = new Date().toLocaleString("ja-JP");
+  list.push({ name, phone, date, time, menu, note: "※店頭・電話受付", submittedAt, status: "未受付" });
+  localStorage.setItem("yoshida_reservations", JSON.stringify(list));
+
+  const el = document.getElementById("adminOverlay");
+  if (el) el.remove();
+  alert("予約を追加しました！\n" + name + " 様 " + date.replace(/-/g,"/") + " " + time + " " + menu);
+  showAdminPage();
 }
 
 function adminCancel(idx) {
@@ -1004,10 +1083,14 @@ window.onload = function() {
     tries++;
   }
   const today = new Date().toISOString().slice(0, 10);
+  // 翌日以降のみ選択可（当日予約は電話のみ）
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().slice(0, 10);
   const inp = document.getElementById("reserveDate");
   // value を先にセット → min を後にセット（逆にするとブラウザがvalueを無視する）
   inp.value = defaultDate;
-  inp.min   = today;
+  inp.min   = tomorrowStr;
   // generateTimeSlotsを直接呼び出し
   if (defaultDate) generateTimeSlots(defaultDate);
 };
