@@ -352,14 +352,15 @@
 <footer class="site-footer">
   <strong>CUT-SPACE YOSHIDA</strong> &nbsp;|&nbsp; ネット予約システム<br>
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
-  <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button>
+  <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.16</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.15
+// バージョン: v3.16
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -482,7 +483,23 @@ function generateTimeSlots(dateStr) {
 
     if (status === "ok") {
       el.textContent = timeStr;
-      el.onclick = () => selectTime(el, timeStr);
+      el.onclick = () => {
+        // 次の枠がbooked/blockedかチェック（選択すると施術が重なる）
+        const { slotMinutes } = SHOP_CONFIG;
+        const [sh, sm] = timeStr.split(":").map(Number);
+        const nextMins = sh * 60 + sm + slotMinutes;
+        const nh = String(Math.floor(nextMins / 60)).padStart(2, "0");
+        const nm = String(nextMins % 60).padStart(2, "0");
+        const nextSlot = document.querySelector(`.time-slot[data-time="${nh}:${nm}"]`);
+        if (nextSlot && (nextSlot.classList.contains("booked") || nextSlot.classList.contains("blocked"))) {
+          // 次の枠が既に予約されているため選択不可
+          document.getElementById("err-time").textContent = `${timeStr} は次の枠（${nh}:${nm}）がすでに予約済みのため選択できません。`;
+          document.getElementById("err-time").style.display = "block";
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+        selectTime(el, timeStr);
+      };
     } else if (status === "booked") {
       el.textContent = timeStr;
       el.classList.add("booked");
