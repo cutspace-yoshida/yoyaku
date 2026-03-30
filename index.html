@@ -379,14 +379,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.21</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.22</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.21
+// バージョン: v3.22
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -470,6 +470,16 @@ function generateTimeSlots(dateStr) {
 
   const { openHour, closeHour, lastBookHour, lastBookMin, slotMinutes, serviceMins } = SHOP_CONFIG;
 
+  // 臨時休業チェック
+  const tempDates = JSON.parse(localStorage.getItem("tempClosedDates") || "[]");
+  if (tempDates.includes(dateStr)) {
+    container.innerHTML = '<div style="background:#fdecea;border:1px solid #f1948a;border-radius:10px;padding:14px;text-align:center;">' +
+      '<div style="font-size:1.2rem;margin-bottom:6px;">🚫</div>' +
+      '<div style="font-weight:900;color:#c0392b;font-size:0.95rem;margin-bottom:4px;">臨時休業のお知らせ</div>' +
+      '<div style="font-size:0.82rem;color:#555;">都合によりお休みさせていただきます。<br>ご不便をおかけして申し訳ございません。<br>別の日程でのご予約をお願いいたします。</div>' +
+      '</div>';
+    return;
+  }
   // 定休日チェック
   if (dateStr && isClosedDay(dateStr)) {
     container.innerHTML = '<div style="color:#c0392b; font-size:0.85rem; padding:10px 0; font-weight:700;">⚠️ 定休日のため予約できません</div>';
@@ -577,7 +587,7 @@ function generateTimeSlots(dateStr) {
 
   const availableSlots = container.querySelectorAll(".time-slot:not(.closed):not(.booked):not(.blocked)");
   if (container.children.length === 0 || availableSlots.length === 0) {
-    container.innerHTML = '<div style="color:var(--muted); font-size:0.85rem; padding:10px 0; font-weight:700;">本日の受付は終了しました。翌営業日をご選択ください。</div>';
+    container.innerHTML = '<div style="color:var(--muted); font-size:0.85rem; padding:10px 0; font-weight:700;">本日の受付は終了しました。<br>翌営業日をご選択ください。</div>';
   }
 }
 
@@ -861,31 +871,40 @@ function showAdminPage() {
 
   if (active.length === 0) rows = '<div style="text-align:center;color:#aaa;padding:20px;">現在の予約はありません</div>';
 
-  // 当日予約追加フォーム用の時間スロット生成
+  // 当日予約追加フォーム
   const today = new Date().toISOString().slice(0, 10);
-  let timeOpts = '';
-  for (let h = 8; h <= 18; h++) {
-    ['00','30'].forEach(m => {
-      if (h === 18 && m === '30') return;
-      const t = String(h).padStart(2,'0') + ':' + m;
-      timeOpts += '<option value="' + t + '">' + t + '</option>';
-    });
-  }
   const menuList = ['カットセット','丸刈りセット','カットのみ','カラーカットセット','パーマカットセット','特殊パーマ','顔そり','その他・相談'];
   const menuOpts = menuList.map(m => '<option value="' + m + '">' + m + '</option>').join('');
 
+  // 臨時休業状態
+  const tempClosedDates = JSON.parse(localStorage.getItem('tempClosedDates') || '[]');
+  const isTempClosed = tempClosedDates.includes(today);
+
   const addForm =
+    // 臨時休業ボタン
+    '<div style="margin-bottom:12px;background:#fff8e8;border:2px solid #f0c060;border-radius:12px;padding:14px;">' +
+    '<div style="font-weight:900;color:#7a5a00;font-size:0.9rem;margin-bottom:10px;">🚫 臨時休業設定</div>' +
+    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+    '<input id="adm_close_date" type="date" value="' + today + '" style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.85rem;font-family:inherit;flex:1;">' +
+    '<button onclick="adminToggleTempClose()" style="padding:8px 14px;background:' + (isTempClosed ? '#27ae60' : '#e74c3c') + ';color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.85rem;">' + (isTempClosed ? '✅ 本日の休業を解除' : '🚫 この日を臨時休業にする') + '</button>' +
+    '</div>' +
+    '<div style="font-size:0.72rem;color:#888;margin-top:6px;">※臨時休業日はお客様の予約ページで「臨時休業」と表示されます</div>' +
+    '</div>' +
+    // 予約追加フォーム
     '<div style="margin-bottom:16px;background:#f0f9f4;border:2px solid #27ae60;border-radius:12px;padding:16px;">' +
     '<div style="font-weight:900;color:#1a7a4a;font-size:0.95rem;margin-bottom:12px;">📞 電話・直接来店予約を追加</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
     '<input id="adm_name" placeholder="お名前" style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.88rem;font-family:inherit;">' +
     '<input id="adm_phone" placeholder="電話番号" type="tel" style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.88rem;font-family:inherit;">' +
     '</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
-    '<input id="adm_date" type="date" value="' + today + '" style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.88rem;font-family:inherit;">' +
-    '<select id="adm_time" style="padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.88rem;font-family:inherit;">' + timeOpts + '</select>' +
+    '<div style="margin-bottom:8px;">' +
+    '<input id="adm_date" type="date" value="' + today + '" onchange="adminRenderSlots()" style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.88rem;font-family:inherit;">' +
     '</div>' +
-    '<select id="adm_menu" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.88rem;font-family:inherit;margin-bottom:8px;">' + menuOpts + '</select>' +
+    '<div style="margin-bottom:8px;">' +
+    '<select id="adm_menu" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;font-size:0.88rem;font-family:inherit;" onchange="adminRenderSlots()">' + menuOpts + '</select>' +
+    '</div>' +
+    '<div id="adm_slots" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;"></div>' +
+    '<div id="adm_selected_info" style="font-size:0.82rem;color:#1a7a4a;font-weight:700;margin-bottom:8px;min-height:18px;"></div>' +
     '<button onclick="adminAddReservation()" style="width:100%;padding:10px;background:linear-gradient(135deg,#1a7a4a,#27ae60);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.9rem;font-family:inherit;">＋ 予約を追加する</button>' +
     '</div>';
 
@@ -899,18 +918,20 @@ function showAdminPage() {
     '<button onclick="document.getElementById(\'adminOverlay\').remove()" style="border:none;background:#eee;border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:700;">✕ 閉じる</button>' +
     '</div>' + addForm + rows + '</div></div>';
   document.body.appendChild(overlay);
+  // 管理フォームの初期スロット表示
+  setTimeout(() => adminRenderSlots(), 50);
 }
 
 function adminAddReservation() {
   const name  = (document.getElementById("adm_name").value || "").trim();
   const phone = (document.getElementById("adm_phone").value || "").trim();
   const date  = document.getElementById("adm_date").value;
-  const time  = document.getElementById("adm_time").value;
+  const time  = window._admSelectedTime || "";
   const menu  = document.getElementById("adm_menu").value;
 
   if (!name)  { alert("お名前を入力してください"); return; }
   if (!date)  { alert("日付を入力してください"); return; }
-  if (!time)  { alert("時間を選択してください"); return; }
+  if (!time)  { alert("時間枠を選択してください"); return; }
   if (!menu)  { alert("メニューを選択してください"); return; }
 
   const list = getReservations();
@@ -927,7 +948,109 @@ function adminAddReservation() {
 
   const el = document.getElementById("adminOverlay");
   if (el) el.remove();
+  window._admSelectedTime = "";
   alert("予約を追加しました！\n" + name + " 様 " + date.replace(/-/g,"/") + " " + time + " " + menu);
+  showAdminPage();
+}
+
+// 管理者用時間枠レンダリング
+window._admSelectedTime = "";
+function adminRenderSlots() {
+  const dateVal = document.getElementById("adm_date") ? document.getElementById("adm_date").value : "";
+  const menu    = document.getElementById("adm_menu")  ? document.getElementById("adm_menu").value  : "";
+  const container = document.getElementById("adm_slots");
+  const info    = document.getElementById("adm_selected_info");
+  if (!container) return;
+  window._admSelectedTime = "";
+  if (info) info.textContent = "";
+  container.innerHTML = "";
+  if (!dateVal) return;
+
+  const slots = MENU_SLOTS[menu] || 2;
+  const reservations = getReservations().filter(r => r.date === dateVal && r.status !== "キャンセル");
+  const bookedTimes = new Set(reservations.map(r => r.time));
+  const blockedTimes = new Set();
+  reservations.forEach(r => {
+    const ms = MENU_SLOTS[r.menu] || 2;
+    const [bh, bm] = r.time.split(":").map(Number);
+    let t = bh * 60 + bm + 30;
+    const end = bh * 60 + bm + ms * 30;
+    while (t < end) {
+      blockedTimes.add(String(Math.floor(t/60)).padStart(2,"0") + ":" + String(t%60).padStart(2,"0"));
+      t += 30;
+    }
+  });
+
+  for (let h = 8; h <= 18; h++) {
+    [0, 30].forEach(m => {
+      if (h === 18 && m === 30) return;
+      const timeStr = String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0");
+      const btn = document.createElement("button");
+      btn.textContent = timeStr;
+      btn.style.cssText = "padding:8px 2px;border-radius:8px;border:1.5px solid #ddd;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;background:#fafafa;color:#1a2a3a;transition:0.15s;";
+
+      if (bookedTimes.has(timeStr)) {
+        btn.textContent = timeStr + "\n×";
+        btn.style.background = "#fdecea"; btn.style.color = "#c0392b";
+        btn.style.borderColor = "#f1948a"; btn.style.cursor = "not-allowed";
+        btn.style.fontSize = "0.72rem";
+        btn.disabled = true;
+      } else if (blockedTimes.has(timeStr)) {
+        btn.textContent = timeStr + "\n予約";
+        btn.style.background = "#fdecea"; btn.style.color = "#c0392b";
+        btn.style.borderColor = "#f1948a"; btn.style.cursor = "not-allowed";
+        btn.style.fontSize = "0.72rem";
+        btn.disabled = true;
+      } else {
+        btn.onclick = () => {
+          // 施術枠分の重複チェック
+          let conflict = null;
+          for (let i = 1; i < slots; i++) {
+            const [sh, sm] = timeStr.split(":").map(Number);
+            const cm = sh * 60 + sm + 30 * i;
+            const cs = String(Math.floor(cm/60)).padStart(2,"0") + ":" + String(cm%60).padStart(2,"0");
+            if (bookedTimes.has(cs) || blockedTimes.has(cs)) { conflict = cs; break; }
+          }
+          if (conflict) {
+            alert(timeStr + " は施術中に " + conflict + " の予約が重なります。");
+            return;
+          }
+          window._admSelectedTime = timeStr;
+          // 選択状態をリフレッシュ
+          container.querySelectorAll("button").forEach(b => {
+            if (!b.disabled) { b.style.background = "#fafafa"; b.style.color = "#1a2a3a"; b.style.borderColor = "#ddd"; }
+          });
+          btn.style.background = "#1a2a3a"; btn.style.color = "white"; btn.style.borderColor = "#1a2a3a";
+          if (info) {
+            const endMins = timeStr.split(":").map(Number).reduce((h,m) => h*60+m) + slots*30;
+            const endStr = String(Math.floor(endMins/60)).padStart(2,"0") + ":" + String(endMins%60).padStart(2,"0");
+            info.textContent = "✅ 選択中：" + timeStr + " 〜 " + endStr + "（" + menu + "）";
+          }
+        };
+      }
+      container.appendChild(btn);
+    });
+  }
+}
+
+// 臨時休業設定
+function adminToggleTempClose() {
+  const dateInput = document.getElementById("adm_close_date");
+  if (!dateInput) return;
+  const targetDate = dateInput.value;
+  if (!targetDate) { alert("日付を選択してください"); return; }
+  let dates = JSON.parse(localStorage.getItem("tempClosedDates") || "[]");
+  if (dates.includes(targetDate)) {
+    dates = dates.filter(d => d !== targetDate);
+    localStorage.setItem("tempClosedDates", JSON.stringify(dates));
+    alert(targetDate + " の臨時休業を解除しました");
+  } else {
+    dates.push(targetDate);
+    localStorage.setItem("tempClosedDates", JSON.stringify(dates));
+    alert(targetDate + " を臨時休業に設定しました");
+  }
+  const el = document.getElementById("adminOverlay");
+  if (el) el.remove();
   showAdminPage();
 }
 
@@ -1072,8 +1195,9 @@ function executeCancelByPhone() {
 // 初期化
 // ============================================================
 window.onload = function() {
-  // 定休日でない最初の日を計算
+  // 定休日でない最初の「翌日以降」の日を計算（当日予約は電話のみ）
   let d = new Date();
+  d.setDate(d.getDate() + 1); // 翌日からスタート
   let tries = 0;
   let defaultDate = "";
   while (tries < 14) {
