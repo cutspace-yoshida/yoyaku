@@ -379,14 +379,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.23</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.24</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.23
+// バージョン: v3.24
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -943,13 +943,25 @@ function adminAddReservation() {
   }
 
   const submittedAt = new Date().toLocaleString("ja-JP");
-  list.push({ name, phone, date, time, menu, note: "※店頭・電話受付", submittedAt, status: "取り込み済み" }); // 管理者入力はGAS経由取り込み対象外
+  const note = "※店頭・電話受付";
+
+  // GASに送信（スプレッドシートに記録）
+  if (SHOP_CONFIG.gasUrl) {
+    try {
+      const params = new URLSearchParams({ name, phone, date, time, menu, note, submittedAt });
+      fetch(SHOP_CONFIG.gasUrl, { method: "POST", body: params })
+        .catch(e => console.warn("GAS送信エラー:", e));
+    } catch(e) { console.warn("GAS送信エラー:", e); }
+  }
+
+  // localStorageに保存（管理システム取り込み対象）
+  list.push({ name, phone, date, time, menu, note, submittedAt, status: "未受付" });
   localStorage.setItem("yoshida_reservations", JSON.stringify(list));
 
   const el = document.getElementById("adminOverlay");
   if (el) el.remove();
   window._admSelectedTime = "";
-  alert("予約を追加しました！\n" + name + " 様 " + date.replace(/-/g,"/") + " " + time + " " + menu);
+  alert("予約を追加しました！\n" + name + " 様 " + date.replace(/-/g,"/") + " " + time + " " + menu + "\n\n✅ スプレッドシートにも送信しました");
   showAdminPage();
 }
 
