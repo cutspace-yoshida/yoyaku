@@ -379,14 +379,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.22</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.23</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.22
+// バージョン: v3.23
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -943,7 +943,7 @@ function adminAddReservation() {
   }
 
   const submittedAt = new Date().toLocaleString("ja-JP");
-  list.push({ name, phone, date, time, menu, note: "※店頭・電話受付", submittedAt, status: "未受付" });
+  list.push({ name, phone, date, time, menu, note: "※店頭・電話受付", submittedAt, status: "取り込み済み" }); // 管理者入力はGAS経由取り込み対象外
   localStorage.setItem("yoshida_reservations", JSON.stringify(list));
 
   const el = document.getElementById("adminOverlay");
@@ -1195,9 +1195,8 @@ function executeCancelByPhone() {
 // 初期化
 // ============================================================
 window.onload = function() {
-  // 定休日でない最初の「翌日以降」の日を計算（当日予約は電話のみ）
+  // 定休日でない最初の日を計算（当日からスタート・当日の空き確認のため）
   let d = new Date();
-  d.setDate(d.getDate() + 1); // 翌日からスタート
   let tries = 0;
   let defaultDate = "";
   while (tries < 14) {
