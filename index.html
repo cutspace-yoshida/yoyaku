@@ -395,14 +395,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.28</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.29</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.28
+// バージョン: v3.29
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -853,8 +853,14 @@ let cancelTargetIndex = -1;
 function doCancelReservation() {
   const list = getReservations();
   if (cancelTargetIndex >= 0 && cancelTargetIndex < list.length) {
+    const r = list[cancelTargetIndex];
     list[cancelTargetIndex].status = "キャンセル";
     localStorage.setItem("yoshida_reservations", JSON.stringify(list));
+    // ★ GASにキャンセルを通知（スプレッドシートにも反映）
+    if (SHOP_CONFIG.gasUrl) {
+      const params = new URLSearchParams({ action: "cancel", name: r.name, phone: r.phone, date: r.date, time: r.time });
+      fetch(SHOP_CONFIG.gasUrl, { method: "POST", body: params }).catch(e => console.warn("GASキャンセル通知エラー:", e));
+    }
   }
   document.getElementById("completeCard").innerHTML =
     '<div class="complete-card-label">キャンセル完了</div>' +
@@ -1218,8 +1224,14 @@ function hideCancelConfirm() {
 function executeCancelByPhone() {
   const list = getReservations();
   if (cancelByPhoneIdx < 0 || !list[cancelByPhoneIdx]) return;
+  const r = list[cancelByPhoneIdx];
   list[cancelByPhoneIdx].status = "キャンセル";
   localStorage.setItem("yoshida_reservations", JSON.stringify(list));
+  // ★ GASにキャンセルを通知（スプレッドシートにも反映）
+  if (SHOP_CONFIG.gasUrl) {
+    const params = new URLSearchParams({ action: "cancel", name: r.name, phone: r.phone, date: r.date, time: r.time });
+    fetch(SHOP_CONFIG.gasUrl, { method: "POST", body: params }).catch(e => console.warn("GASキャンセル通知エラー:", e));
+  }
   document.getElementById("cancelConfirmOverlay").style.display = "none";
   cancelByPhoneIdx = -1;
   // 結果を更新表示
@@ -1231,6 +1243,35 @@ function executeCancelByPhone() {
 // ============================================================
 // 初期化
 // ============================================================
+// ============================================================
+// GASから全予約を取得してlocalStorageを同期する
+// ============================================================
+function syncReservationsFromGAS(callback) {
+  if (!SHOP_CONFIG.gasUrl) { if (callback) callback(); return; }
+  fetch(SHOP_CONFIG.gasUrl + "?action=allReservations")
+    .then(r => r.json())
+    .then(data => {
+      if (!Array.isArray(data)) { if (callback) callback(); return; }
+      // GASの全予約データでlocalStorageを再構築
+      const rebuilt = data.map(r => ({
+        name:        r.name        || "",
+        phone:       r.phone       || "",
+        date:        r.date        || "",
+        time:        r.time        || "",
+        menu:        r.menu        || "",
+        note:        r.note        || "",
+        submittedAt: r.submittedAt || "",
+        status:      r.status      || "未受付"
+      }));
+      localStorage.setItem("yoshida_reservations", JSON.stringify(rebuilt));
+      if (callback) callback();
+    })
+    .catch(e => {
+      console.warn("GAS同期エラー:", e);
+      if (callback) callback();
+    });
+}
+
 window.onload = function() {
   // 定休日でない最初の日を計算（当日からスタート・当日の空き確認のため）
   let d = new Date();
@@ -1248,8 +1289,17 @@ window.onload = function() {
   // value を先にセット → min を後にセット（逆にするとブラウザがvalueを無視する）
   inp.value = defaultDate;
   inp.min   = today;
-  // generateTimeSlotsを直接呼び出し
-  if (defaultDate) generateTimeSlots(defaultDate);
+  // ★ 起動時にGASから最新予約を取得してからスロット表示
+  syncReservationsFromGAS(function() {
+    if (defaultDate) generateTimeSlots(defaultDate);
+  });
+  // ★ 3分ごとに自動同期（管理システムの追加・キャンセルを反映）
+  setInterval(function() {
+    const dateVal = document.getElementById("reserveDate").value;
+    syncReservationsFromGAS(function() {
+      if (dateVal) generateTimeSlots(dateVal);
+    });
+  }, 3 * 60 * 1000);
 };
 </script>
 </body>
