@@ -78,6 +78,9 @@
   /* 予約済み（他のお客様） */
   .time-slot.blocked { background: #fdecea; color: #c0392b; cursor: not-allowed; border-color: #f1948a; }
   .time-slot.blocked::after { content: "予約"; font-size: 0.62rem; display: block; color: #c0392b; margin-top: 1px; }
+  /* 当日閲覧専用枠（お客様は選択不可・見た目は薄グレー）*/
+  .time-slot.past-view { background: #f5f5f5; color: #aaa; cursor: not-allowed; border-color: #e0e0e0; }
+  .time-slot.past-view::after { content: "閲覧"; font-size: 0.62rem; display: block; color: #bbb; margin-top: 1px; }
   /* 選択中の次枠（自分の予約で埋まる枠）*/
   .time-slot.selected-next { background: var(--primary) !important; border-color: var(--primary) !important; color: white !important; cursor: not-allowed; opacity: 0.65; }
   .time-slot.selected-next::after { content: "×" !important; font-size: 0.7rem; display: block; color: rgba(255,255,255,0.85) !important; margin-top: 1px; }
@@ -90,6 +93,7 @@
   .legend-dot.booked { background: #fdecea; border-color: #f1948a; }
   .legend-dot.blocked { background: #fdecea; border-color: #f1948a; }
   .legend-dot.selected { background: var(--primary); border-color: var(--primary); }
+  .legend-dot.viewonly { background: #f0f0f0; border-color: #bbb; }
 
   /* メニュー */
   .menu-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -172,7 +176,7 @@
 </div>
 
 <div id="topErrorBanner" style="display:none; background:#fdecea; border-left:4px solid #e74c3c; padding:12px 16px; font-size:0.88rem; color:#c0392b; font-weight:700; text-align:center; letter-spacing:0.3px;"></div>
-<div style="background:linear-gradient(135deg,#fff8e8,#fef3c7); border-left:4px solid #f0c060; padding:12px 18px; font-size:0.82rem; color:#7a5a00; font-weight:700; text-align:center; letter-spacing:0.3px;">📞 当日のご予約はお電話にてお承りしております。お気軽にご連絡ください。<br><a href="tel:0298874213" style="color:#c07000; text-decoration:none; font-size:0.95rem; font-weight:900;">029-887-4213</a></div>
+<div style="background:linear-gradient(135deg,#fff8e8,#fef3c7); border-left:4px solid #f0c060; padding:14px 20px; font-size:0.82rem; color:#7a5a00; text-align:center; letter-spacing:0.3px;"><div style="font-weight:900; font-size:0.9rem; margin-bottom:6px;">📞 当日のご予約はお電話にて承っております</div><div style="font-weight:700; margin-bottom:8px; font-size:0.78rem; color:#a07000;">ネット予約は<strong style="color:#c07000;">翌日以降</strong>のみ受け付けております。当日ご来店希望の方はお気軽にお電話ください。</div><a href="tel:0298874213" style="display:inline-block; background:#c07000; color:white; text-decoration:none; font-size:1rem; font-weight:900; padding:8px 24px; border-radius:30px; letter-spacing:1px;">📞 029-887-4213</a></div>
 
 <div class="main">
 
@@ -200,7 +204,8 @@
       ・定休日（毎週火曜日・第2・第3月曜日）および営業時間外はご予約いただけません<br>
       ・当日キャンセルはお電話にてご連絡ください<br>
       ・ご予約は1時間ごとのご案内となります<br>
-      ・ご不明な点はお電話にてお問い合わせください
+      ・ご不明な点はお電話にてお問い合わせください<br>
+      ・<strong>前日までのキャンセル</strong>は、このページ下部の「ご予約のキャンセル」より、ご予約時にご入力いただいた<strong>電話番号で検索</strong>してお手続きいただけます
     </div>
 
     <div class="card">
@@ -213,6 +218,10 @@
       <div class="form-group" style="margin-bottom:0;">
         <label class="form-label">電話番号 <span class="required">※必須</span></label>
         <input type="tel" class="form-input" id="guestPhone" placeholder="例：090-1234-5678" autocomplete="tel" inputmode="tel">
+        <div style="margin-top:6px; font-size:0.74rem; color:#777; line-height:1.7; background:#f7f4ef; border-radius:8px; padding:8px 10px;">
+          📌 ご入力いただいた電話番号は、<strong style="color:#1a2a3a;">前日までのキャンセル手続き</strong>にご利用いただけます。このページ下部の「ご予約のキャンセル」より、電話番号で検索してお手続きください。<br>
+          🔒 お客様の電話番号は予約管理のみに使用し、その他の目的には一切使用いたしません。
+        </div>
         <div class="error-msg" id="err-phone">電話番号を入力してください</div>
       </div>
     </div>
@@ -276,13 +285,20 @@
         <label class="form-label">ご希望時間 <span class="required">※必須</span>
           <span style="font-size:0.68rem; color:var(--muted); font-weight:400; margin-left:6px;">（カットセットの施術は約1時間です）</span>
         </label>
-        <div id="todayNotice" style="display:none; background:#fff8e8; border:1px solid #f0c060; border-radius:10px; padding:10px 14px; font-size:0.82rem; color:#7a5a00; font-weight:700; margin-bottom:8px;">📞 当日のご予約はお電話にてお承りしております。<br>以下は現在の予約状況のご確認のみとなります。</div>
+        <div style="margin-bottom:10px; background:#fff8e8; border:1px solid #f0c060; border-radius:10px; padding:11px 14px; font-size:0.8rem; color:#7a5a00; line-height:1.8;">
+          <strong style="display:block; margin-bottom:4px;">📅 ネット予約は「翌日以降」のみ受け付けております</strong>
+          当日のご予約・お問い合わせはお電話にてお承りしております。<br>
+          下のカレンダーで当日を選択した場合は<strong>閲覧のみ</strong>となり、予約はできません。<br>
+          <span style="margin-top:6px; display:inline-block;">📞 お気軽にお電話ください：<a href="tel:0298874213" style="color:#c07000; font-weight:900; font-size:0.95rem; text-decoration:none;">029-887-4213</a></span>
+        </div>
+        <div id="todayNotice" style="display:none; background:#fdecea; border:1px solid #f1948a; border-radius:10px; padding:10px 14px; font-size:0.82rem; color:#c0392b; font-weight:700; margin-bottom:8px;">⚠️ 当日はネット予約できません。以下は予約状況の<strong>確認のみ</strong>です。<br>ご予約はお電話にて：<a href="tel:0298874213" style="color:#c0392b; text-decoration:none; font-weight:900;">029-887-4213</a></div>
         <div class="time-slots" id="timeSlots"></div>
         <div class="slot-legend">
           <div class="legend-item"><div class="legend-dot ok"></div>予約可</div>
           <div class="legend-item"><div class="legend-dot booked"></div>予約済</div>
           <div class="legend-item"><div class="legend-dot blocked"></div>予約（他）</div>
           <div class="legend-item"><div class="legend-dot selected"></div>選択中</div>
+          <div class="legend-item"><div class="legend-dot viewonly"></div>閲覧のみ</div>
         </div>
         <div class="error-msg" id="err-time">時間を選択してください</div>
       </div>
@@ -379,14 +395,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.24</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.28</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.24
+// バージョン: v3.28
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -576,6 +592,9 @@ function generateTimeSlots(dateStr) {
     } else if (status === "blocked") {
       el.textContent = timeStr;
       el.classList.add("blocked");
+    } else if (status === "past") {
+      el.textContent = timeStr;
+      el.classList.add("past-view");
     } else {
       el.textContent = timeStr;
       el.classList.add("closed");
@@ -585,9 +604,15 @@ function generateTimeSlots(dateStr) {
     t += slotMinutes;
   }
 
-  const availableSlots = container.querySelectorAll(".time-slot:not(.closed):not(.booked):not(.blocked)");
+  const availableSlots = container.querySelectorAll(".time-slot:not(.closed):not(.booked):not(.blocked):not(.past-view)");
   if (container.children.length === 0 || availableSlots.length === 0) {
-    container.innerHTML = '<div style="color:var(--muted); font-size:0.85rem; padding:10px 0; font-weight:700;">本日の受付は終了しました。<br>翌営業日をご選択ください。</div>';
+    // 当日の場合は「空き確認のみ」メッセージ、それ以外は受付終了
+    const todayCheck2 = new Date().toISOString().slice(0, 10);
+    if (dateStr === todayCheck2) {
+      // 当日：スロットは表示済みなので何もしない（上のtodayNoticeで案内済み）
+    } else {
+      container.innerHTML = '<div style="color:var(--muted); font-size:0.85rem; padding:10px 0; font-weight:700;">本日の受付は終了しました。<br>翌営業日をご選択ください。</div>';
+    }
   }
 }
 
@@ -1218,14 +1243,11 @@ window.onload = function() {
     tries++;
   }
   const today = new Date().toISOString().slice(0, 10);
-  // 翌日以降のみ選択可（当日予約は電話のみ）
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+  // 当日から選択可（当日は閲覧のみ・予約は翌日以降）
   const inp = document.getElementById("reserveDate");
   // value を先にセット → min を後にセット（逆にするとブラウザがvalueを無視する）
   inp.value = defaultDate;
-  inp.min   = tomorrowStr;
+  inp.min   = today;
   // generateTimeSlotsを直接呼び出し
   if (defaultDate) generateTimeSlots(defaultDate);
 };
