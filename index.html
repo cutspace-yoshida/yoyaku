@@ -395,14 +395,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.32</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.33</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.32
+// バージョン: v3.33
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -1246,6 +1246,15 @@ function executeCancelByPhone() {
 // ============================================================
 // GASから全予約を取得してlocalStorageを同期する
 // ============================================================
+// 時間文字列を HH:MM 形式に正規化（"8:00"→"08:00"）
+function normalizeTime(t) {
+  if (!t) return "";
+  const s = String(t).trim().substring(0, 5);
+  const parts = s.split(":");
+  if (parts.length !== 2) return s;
+  return String(parts[0]).padStart(2, "0") + ":" + String(parts[1]).padStart(2, "0");
+}
+
 function syncReservationsFromGAS(callback) {
   if (!SHOP_CONFIG.gasUrl) { if (callback) callback(); return; }
   fetch(SHOP_CONFIG.gasUrl + "?action=allReservations")
@@ -1253,11 +1262,12 @@ function syncReservationsFromGAS(callback) {
     .then(data => {
       if (!Array.isArray(data)) { if (callback) callback(); return; }
       // GASの全予約データでlocalStorageを再構築
+      // ★ 時間を HH:MM に正規化（"8:00"→"08:00"）してスロットと一致させる
       const rebuilt = data.map(r => ({
         name:        r.name        || "",
         phone:       r.phone       || "",
         date:        r.date        || "",
-        time:        r.time        || "",
+        time:        normalizeTime(r.time),
         menu:        r.menu        || "",
         note:        r.note        || "",
         submittedAt: r.submittedAt || "",
@@ -1277,6 +1287,34 @@ function getTodayJST() {
   const now = new Date();
   const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
   return jst.toISOString().slice(0, 10);
+}
+
+// barberData_v1（管理システム）のnextDate予約をyoshida_reservationsに統合
+function mergeBarberDataToReservations() {
+  try {
+    const barberData = JSON.parse(localStorage.getItem("barberData_v1") || "{}");
+    const existing = JSON.parse(localStorage.getItem("yoshida_reservations") || "[]");
+    const merged = [...existing];
+    for (const name in barberData) {
+      const cd = barberData[name];
+      if (!cd.nextDate || !cd.nextTime) continue;
+      // すでに同じ日時・名前の予約がある場合はスキップ
+      const dup = merged.find(r => r.date === cd.nextDate && normalizeTime(r.time) === normalizeTime(cd.nextTime) && r.name === name);
+      if (dup) continue;
+      if (cd.checked) continue; // 来店受付済みはスキップ
+      merged.push({
+        name:        name,
+        phone:       cd.phone       || "",
+        date:        cd.nextDate,
+        time:        normalizeTime(cd.nextTime),
+        menu:        cd.menu        || "",
+        note:        "※管理システム連携",
+        submittedAt: "",
+        status:      "未受付"
+      });
+    }
+    localStorage.setItem("yoshida_reservations", JSON.stringify(merged));
+  } catch(e) { console.warn("barberData統合エラー:", e); }
 }
 
 window.onload = function() {
@@ -1299,12 +1337,14 @@ window.onload = function() {
   inp.min   = today;
   // ★ 起動時にGASから最新予約を取得してからスロット表示
   syncReservationsFromGAS(function() {
+    mergeBarberDataToReservations(); // ★ 管理システムのnextDate予約を統合
     if (defaultDate) generateTimeSlots(defaultDate);
   });
   // ★ 3分ごとに自動同期（管理システムの追加・キャンセルを反映）
   setInterval(function() {
     const dateVal = document.getElementById("reserveDate").value;
     syncReservationsFromGAS(function() {
+      mergeBarberDataToReservations(); // ★ 管理システムのnextDate予約を統合
       if (dateVal) generateTimeSlots(dateVal);
     });
   }, 3 * 60 * 1000);
