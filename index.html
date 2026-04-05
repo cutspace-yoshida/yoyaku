@@ -395,14 +395,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.34</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.35</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.34
+// バージョン: v3.35
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -1330,20 +1330,21 @@ window.onload = function() {
     d.setDate(d.getDate() + 1);
     tries++;
   }
-  // 翌日以降のみ選択可（当日予約は電話のみ）
+  // ★ defaultDate は当日から（お客様が当日の空き確認のために表示）
+  // ただし min は翌日（カレンダーで選択できるのは翌日以降のみ）
+  // 当日が表示されても時間スロットは全て「閲覧のみ」になる
   const tomorrow = new Date(today + "T00:00:00");
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = new Date(tomorrow.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const inp = document.getElementById("reserveDate");
   // value を先にセット → min を後にセット（逆にするとブラウザがvalueを無視する）
-  // defaultDate は翌日以降の最初の営業日
-  const defaultDateFinal = (defaultDate === today) ? tomorrowStr : defaultDate;
-  inp.value = defaultDateFinal;
+  // defaultDate は当日から（空き確認のため）・min は翌日（予約は翌日以降のみ）
+  inp.value = defaultDate;
   inp.min   = tomorrowStr;
   // ★ 起動時にGASから最新予約を取得してからスロット表示
   syncReservationsFromGAS(function() {
     mergeBarberDataToReservations(); // ★ 管理システムのnextDate予約を統合
-    if (defaultDateFinal) generateTimeSlots(defaultDateFinal);
+    if (defaultDate) generateTimeSlots(defaultDate);
   });
   // ★ 3分ごとに自動同期（管理システムの追加・キャンセルを反映）
   setInterval(function() {
