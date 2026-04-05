@@ -395,14 +395,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.33</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.34</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.33
+// バージョン: v3.34
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -701,8 +701,8 @@ function goToConfirm() {
   const name  = document.getElementById("guestName").value.trim();
   const phone = document.getElementById("guestPhone").value.trim();
   const date  = document.getElementById("reserveDate").value;
-  // 当日予約は電話のみ → 送信ブロック
-  const _todayStr = new Date().toISOString().slice(0, 10);
+  // 当日予約は電話のみ → 送信ブロック（getTodayJST()でJST基準）
+  const _todayStr = getTodayJST();
   if (date === _todayStr) {
     alert("当日のご予約はお電話にてお承りしております。\n📞 029-887-4213\nお気軽にご連絡ください。");
     return;
@@ -793,8 +793,8 @@ async function submitReservation() {
   const name  = document.getElementById("guestName").value.trim();
   const phone = document.getElementById("guestPhone").value.trim();
   const date  = document.getElementById("reserveDate").value;
-  // 当日予約は電話のみ → 送信ブロック
-  const _todayStr = new Date().toISOString().slice(0, 10);
+  // 当日予約は電話のみ → 送信ブロック（getTodayJST()でJST基準）
+  const _todayStr = getTodayJST();
   if (date === _todayStr) {
     alert("当日のご予約はお電話にてお承りしております。\n📞 029-887-4213\nお気軽にご連絡ください。");
     return;
@@ -1330,15 +1330,20 @@ window.onload = function() {
     d.setDate(d.getDate() + 1);
     tries++;
   }
-  // 当日から選択可（当日は閲覧のみ・予約は翌日以降）
+  // 翌日以降のみ選択可（当日予約は電話のみ）
+  const tomorrow = new Date(today + "T00:00:00");
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = new Date(tomorrow.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const inp = document.getElementById("reserveDate");
   // value を先にセット → min を後にセット（逆にするとブラウザがvalueを無視する）
-  inp.value = defaultDate;
-  inp.min   = today;
+  // defaultDate は翌日以降の最初の営業日
+  const defaultDateFinal = (defaultDate === today) ? tomorrowStr : defaultDate;
+  inp.value = defaultDateFinal;
+  inp.min   = tomorrowStr;
   // ★ 起動時にGASから最新予約を取得してからスロット表示
   syncReservationsFromGAS(function() {
     mergeBarberDataToReservations(); // ★ 管理システムのnextDate予約を統合
-    if (defaultDate) generateTimeSlots(defaultDate);
+    if (defaultDateFinal) generateTimeSlots(defaultDateFinal);
   });
   // ★ 3分ごとに自動同期（管理システムの追加・キャンセルを反映）
   setInterval(function() {
