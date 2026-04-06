@@ -395,14 +395,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.35</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.36</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.35
+// バージョン: v3.36
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -1340,7 +1340,7 @@ window.onload = function() {
   // value を先にセット → min を後にセット（逆にするとブラウザがvalueを無視する）
   // defaultDate は当日から（空き確認のため）・min は翌日（予約は翌日以降のみ）
   inp.value = defaultDate;
-  inp.min   = tomorrowStr;
+  inp.min   = today;  // ★ 当日から選択可（当日スロットは閲覧のみ、予約は翌日以降）
   // ★ 起動時にGASから最新予約を取得してからスロット表示
   syncReservationsFromGAS(function() {
     mergeBarberDataToReservations(); // ★ 管理システムのnextDate予約を統合
