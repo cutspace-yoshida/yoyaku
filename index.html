@@ -395,14 +395,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.36</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.37</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.36
+// バージョン: v3.37
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -550,8 +550,8 @@ function generateTimeSlots(dateStr) {
       status = "booked";
     } else if (blockedTimes.has(timeStr)) {
       status = "blocked";
-    } else if (dateStr === today) {
-      // 当日は全枠閲覧のみ（予約不可）
+    } else if (dateStr === today && !isTodayBookable()) {
+      // 当日06:00以降は閲覧のみ（予約不可）
       status = "past";
     }
 
@@ -638,7 +638,9 @@ function onDateChange() {
   const todayCheck = new Date().toISOString().slice(0, 10);
   const todayNotice = document.getElementById("todayNotice");
   if (todayNotice) {
-    todayNotice.style.display = dateVal === todayCheck ? "block" : "none";
+    // 当日かつ06:00以降のみ「閲覧のみ」メッセージを表示
+    const _isToday = dateVal === todayCheck;
+    todayNotice.style.display = (_isToday && !isTodayBookable()) ? "block" : "none";
   }
   generateTimeSlots(dateVal);
 }
@@ -701,9 +703,9 @@ function goToConfirm() {
   const name  = document.getElementById("guestName").value.trim();
   const phone = document.getElementById("guestPhone").value.trim();
   const date  = document.getElementById("reserveDate").value;
-  // 当日予約は電話のみ → 送信ブロック（getTodayJST()でJST基準）
+  // 当日06:00以降は電話のみ → 送信ブロック
   const _todayStr = getTodayJST();
-  if (date === _todayStr) {
+  if (date === _todayStr && !isTodayBookable()) {
     alert("当日のご予約はお電話にてお承りしております。\n📞 029-887-4213\nお気軽にご連絡ください。");
     return;
   }
@@ -793,9 +795,9 @@ async function submitReservation() {
   const name  = document.getElementById("guestName").value.trim();
   const phone = document.getElementById("guestPhone").value.trim();
   const date  = document.getElementById("reserveDate").value;
-  // 当日予約は電話のみ → 送信ブロック（getTodayJST()でJST基準）
+  // 当日06:00以降は電話のみ → 送信ブロック
   const _todayStr = getTodayJST();
-  if (date === _todayStr) {
+  if (date === _todayStr && !isTodayBookable()) {
     alert("当日のご予約はお電話にてお承りしております。\n📞 029-887-4213\nお気軽にご連絡ください。");
     return;
   }
@@ -1280,6 +1282,12 @@ function syncReservationsFromGAS(callback) {
       console.warn("GAS同期エラー:", e);
       if (callback) callback();
     });
+}
+
+// 当日の予約受付可否判定：JST 06:00 未満なら予約可
+function isTodayBookable() {
+  const jstHour = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).getUTCHours();
+  return jstHour < 6; // 06:00 未満なら true（予約可）
 }
 
 // 日本時間(JST=UTC+9)で YYYY-MM-DD を返す（toISOString はUTC基準のため深夜にずれる）
