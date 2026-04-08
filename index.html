@@ -550,8 +550,8 @@ function generateTimeSlots(dateStr) {
       status = "booked";
     } else if (blockedTimes.has(timeStr)) {
       status = "blocked";
-    } else if (dateStr === today && !isTodayBookable()) {
-      // 当日06:00以降は閲覧のみ（予約不可）
+    } else if (dateStr === today) {
+      // 当日は全枠閲覧のみ（予約不可）
       status = "past";
     }
 
@@ -638,9 +638,7 @@ function onDateChange() {
   const todayCheck = new Date().toISOString().slice(0, 10);
   const todayNotice = document.getElementById("todayNotice");
   if (todayNotice) {
-    // 当日かつ06:00以降のみ「閲覧のみ」メッセージを表示
-    const _isToday = dateVal === todayCheck;
-    todayNotice.style.display = (_isToday && !isTodayBookable()) ? "block" : "none";
+    todayNotice.style.display = dateVal === todayCheck ? "block" : "none";
   }
   generateTimeSlots(dateVal);
 }
@@ -703,9 +701,9 @@ function goToConfirm() {
   const name  = document.getElementById("guestName").value.trim();
   const phone = document.getElementById("guestPhone").value.trim();
   const date  = document.getElementById("reserveDate").value;
-  // 当日06:00以降は電話のみ → 送信ブロック
+  // 当日予約は電話のみ → 送信ブロック（getTodayJST()でJST基準）
   const _todayStr = getTodayJST();
-  if (date === _todayStr && !isTodayBookable()) {
+  if (date === _todayStr) {
     alert("当日のご予約はお電話にてお承りしております。\n📞 029-887-4213\nお気軽にご連絡ください。");
     return;
   }
@@ -795,9 +793,9 @@ async function submitReservation() {
   const name  = document.getElementById("guestName").value.trim();
   const phone = document.getElementById("guestPhone").value.trim();
   const date  = document.getElementById("reserveDate").value;
-  // 当日06:00以降は電話のみ → 送信ブロック
+  // 当日予約は電話のみ → 送信ブロック（getTodayJST()でJST基準）
   const _todayStr = getTodayJST();
-  if (date === _todayStr && !isTodayBookable()) {
+  if (date === _todayStr) {
     alert("当日のご予約はお電話にてお承りしております。\n📞 029-887-4213\nお気軽にご連絡ください。");
     return;
   }
@@ -1284,12 +1282,6 @@ function syncReservationsFromGAS(callback) {
     });
 }
 
-// 当日の予約受付可否判定：JST 06:00 未満なら予約可
-function isTodayBookable() {
-  const jstHour = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).getUTCHours();
-  return jstHour < 6; // 06:00 未満なら true（予約可）
-}
-
 // 日本時間(JST=UTC+9)で YYYY-MM-DD を返す（toISOString はUTC基準のため深夜にずれる）
 function getTodayJST() {
   const now = new Date();
@@ -1316,7 +1308,7 @@ function mergeBarberDataToReservations() {
         date:        cd.nextDate,
         time:        normalizeTime(cd.nextTime),
         menu:        cd.menu        || "",
-        note:        "※管理システム連携",
+        note:        "",
         submittedAt: "",
         status:      "未受付"
       });
