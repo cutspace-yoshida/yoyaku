@@ -77,7 +77,7 @@
   .time-slot.booked::after { content: "×"; font-size: 0.7rem; display: block; color: #c0392b; }
   /* 予約済み（他のお客様） */
   .time-slot.blocked { background: #fdecea; color: #c0392b; cursor: not-allowed; border-color: #f1948a; }
-  .time-slot.blocked::after { content: "予約"; font-size: 0.62rem; display: block; color: #c0392b; margin-top: 1px; }
+  .time-slot.blocked::after { content: "×"; font-size: 0.62rem; display: block; color: #c0392b; margin-top: 1px; }
   /* 当日閲覧専用枠（お客様は選択不可・見た目は薄グレー）*/
   .time-slot.past-view { background: #f5f5f5; color: #aaa; cursor: not-allowed; border-color: #e0e0e0; }
   .time-slot.past-view::after { content: "閲覧"; font-size: 0.62rem; display: block; color: #bbb; margin-top: 1px; }
@@ -161,7 +161,7 @@
 <header class="site-header">
   <div class="header-inner">
     <div class="shop-logo">CUT-SPACE YOSHIDA<span>BARBER SHOP</span></div>
-    <div class="header-badge">✂ ネット予約</div>
+
   </div>
 </header>
 
@@ -296,7 +296,6 @@
         <div class="slot-legend">
           <div class="legend-item"><div class="legend-dot ok"></div>予約可</div>
           <div class="legend-item"><div class="legend-dot booked"></div>予約済</div>
-          <div class="legend-item"><div class="legend-dot blocked"></div>予約（他）</div>
           <div class="legend-item"><div class="legend-dot selected"></div>選択中</div>
           <div class="legend-item"><div class="legend-dot viewonly"></div>閲覧のみ</div>
         </div>
@@ -395,14 +394,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.38</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.39</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.38
+// バージョン: v3.39
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
