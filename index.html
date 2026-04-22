@@ -269,6 +269,16 @@
           <div class="menu-price">¥2,500</div>
           <div class="menu-desc">顔そりのみ</div>
         </div>
+        <div class="menu-option" onclick="selectMenu(this,'アイロンパーマ')">
+          <div class="menu-name">🌀 アイロンパーマ</div>
+          <div class="menu-price">¥8,400〜</div>
+          <div class="menu-desc">パンチパーマ＋シャンプー＋顔そり＋仕上げ</div>
+        </div>
+        <div class="menu-option" onclick="selectMenu(this,'丸刈りのみ')">
+          <div class="menu-name">✂ 丸刈りのみ</div>
+          <div class="menu-price">¥3,100</div>
+          <div class="menu-desc">カット＋シャンプー＋仕上げ</div>
+        </div>
         <div class="menu-option" onclick="selectMenu(this,'その他・相談')">
           <div class="menu-name">💬 その他・相談</div>
           <div class="menu-price">要相談</div>
@@ -399,14 +409,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.41</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.42</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.41
+// バージョン: v3.42
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -475,6 +485,8 @@ const MENU_SLOTS = {
   '顔そり':             1,   // 30分（1枠）
   'その他・相談':       2,   // 60分（2枠）デフォルト
   '施術延長':           1,   // 30分（1枠）クイック予約用
+  'アイロンパーマ':     5,   // 150分（5枠）パンチパーマ対応
+  '丸刈りのみ':         1,   // 30分（1枠）カット+シャンプー+仕上げ
 };
 
 // 現在選択中のメニューの施術枠数を返す（未選択時は最大7枠）
