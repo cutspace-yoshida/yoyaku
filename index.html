@@ -409,14 +409,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.42</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.43</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.42
+// バージョン: v3.43
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -429,7 +429,7 @@ const SHOP_CONFIG = {
   slotMinutes:  30,    // スロット単位（分）
   serviceMins:  60,    // 施術時間（分）→ この間ブロック
   // ★ Googleスプレッドシート GAS URL（後でセット）
-  gasUrl: "https://script.google.com/macros/s/AKfycbzjebnfsEvuj5CtzhhDdB6nU97BQfOYoDpP7m4y1UwoyTNXmuR35nCzgiOiPBjavsMZJQ/exec"
+  gasUrl: "https://script.google.com/macros/s/AKfycbxDydHuPRed66zp-LmBhTFNYZ8LLKlEYPcjZHxFDuRda0-_tG5D18U8CHs5UsGETpsUQA/exec"
 };
 
 // ============================================================
@@ -520,7 +520,7 @@ function generateTimeSlots(dateStr) {
   }
 
   // 予約済みスロット取得
-  const reservations = getReservations().filter(r => r.date === dateStr && r.status !== "キャンセル");
+  const reservations = getReservations().filter(r => r.date === dateStr && r.status !== "キャンセル" && r.status !== "受付済み");
   const bookedTimes = new Set(reservations.map(r => r.time));
 
   // ブロックされる時間帯（予約済み + 施術中）
@@ -899,7 +899,7 @@ function showAdminPage() {
   if (pwd !== "yoshida2024") { alert("パスワードが違います"); return; }
 
   const list = getReservations();
-  const active = list.filter(r => r.status !== "キャンセル");
+  const active = list.filter(r => r.status !== "キャンセル" && r.status !== "受付済み");
 
   let rows = "";
   active.forEach(r => {
@@ -985,7 +985,7 @@ function adminAddReservation() {
 
   const list = getReservations();
   // 重複チェック
-  const dup = list.find(r => r.date === date && r.time === time && r.status !== "キャンセル");
+  const dup = list.find(r => r.date === date && r.time === time && r.status !== "キャンセル" && r.status !== "受付済み");
   if (dup) {
     alert(date + " " + time + " はすでに予約が入っています。\n（" + dup.name + " 様）");
     return;
@@ -1028,7 +1028,7 @@ function adminRenderSlots() {
   if (!dateVal) return;
 
   const slots = MENU_SLOTS[menu] || 2;
-  const reservations = getReservations().filter(r => r.date === dateVal && r.status !== "キャンセル");
+  const reservations = getReservations().filter(r => r.date === dateVal && r.status !== "キャンセル" && r.status !== "受付済み");
   const bookedTimes = new Set(reservations.map(r => r.time));
   const blockedTimes = new Set();
   reservations.forEach(r => {
@@ -1183,7 +1183,7 @@ function searchByPhone() {
   // 電話番号が一致し、キャンセル済みでない予約
   const matched = list
     .map((r, i) => ({ r, i }))
-    .filter(({ r }) => r.phone === phone && r.status !== "キャンセル");
+    .filter(({ r }) => r.phone === phone && r.status !== "キャンセル" && r.status !== "受付済み");
 
   if (matched.length === 0) {
     result.innerHTML = '<div style="background:#f8f9fa; border:1px solid #ddd; border-radius:10px; padding:14px; font-size:0.85rem; color:#888; text-align:center;">予約が見つかりません<br><span style="font-size:0.75rem;">電話番号をご確認ください</span></div>';
