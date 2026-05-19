@@ -210,7 +210,7 @@
       ・当日キャンセルはお電話にてご連絡ください<br>
       ・ご予約は1時間ごとのご案内となります<br>
       ・ご不明な点はお電話にてお問い合わせください<br>
-      ・<strong>前日までのキャンセル</strong>は、このページ下部の「ご予約のキャンセル」より、ご予約時にご入力いただいた<strong>電話番号で検索</strong>してお手続きいただけます
+      ・<span style="font-weight:bold;">前日までのキャンセル</span>は、このページ下部の「ご予約のキャンセル」より、ご予約時にご入力いただいた<span style="font-weight:bold;">電話番号で検索</span>してお手続きいただけます
     </div>
 
     <div class="card">
@@ -377,8 +377,8 @@
         ご予約のキャンセル
       </div>
       <div class="notice" style="margin-bottom:14px;">
-        <strong>📌 キャンセルについて</strong>
-        ・キャンセルは<strong>前日まで</strong>このページから受け付けます<br>
+        <strong>📌 キャンセルについて</strong><br>
+        ・キャンセルは<span style="font-weight:bold;">前日まで</span>このページから受け付けます<br>
         ・当日キャンセルは必ずお電話にてご連絡ください<br>
         ・予約時にご入力された電話番号で検索できます
       </div>
@@ -409,14 +409,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.44</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.47</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.44
+// バージョン: v3.47
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -478,15 +478,17 @@ let selectedTime = "";
 const MENU_SLOTS = {
   'カットセット':       2,   // 60分（2枠）
   '丸刈りセット':       2,   // 60分（2枠）
+  '高校生':             2,   // 60分（2枠）
   'カットのみ':         2,   // 60分（2枠）
-  'カラーカットセット': 4,   // 120分（4枠）
+  '丸刈りのみ':         1,   // 30分（1枠）
+  'パーマ':             5,   // 150分（5枠）
   'パーマカットセット': 5,   // 150分（5枠）
-  '特殊パーマ':         7,   // 210分（7枠）
+  'カラー':             5,   // 150分（5枠）
+  'カラーカットセット': 5,   // 150分（5枠）
+  'パンチパーマ':       5,   // 150分（5枠）
+  '特殊パーマ':         6,   // 180分（6枠）
   '顔そり':             1,   // 30分（1枠）
-  'その他・相談':       2,   // 60分（2枠）デフォルト
   '施術延長':           1,   // 30分（1枠）クイック予約用
-  'アイロンパーマ':     5,   // 150分（5枠）パンチパーマ対応
-  '丸刈りのみ':         1,   // 30分（1枠）カット+シャンプー+仕上げ
 };
 
 // 現在選択中のメニューの施術枠数を返す（未選択時は最大7枠）
