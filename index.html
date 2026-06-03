@@ -409,14 +409,18 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.47</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.48</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.47
+// バージョン: v3.48
+// 営業時間設定キャッシュ
+let _timeSlotsCache = {};  // { 'default': [...], '2026-06-01': [...] }
+let _timeSlotsCacheLoaded = false;
+
 const SHOP_CONFIG = {
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
@@ -499,6 +503,37 @@ function getServiceSlots() {
 
 let selectedMenu = "";
 
+// GASから営業時間設定を取得してキャッシュ
+async function fetchTimeSlots(dateStr) {
+  if (_timeSlotsCache[dateStr]) return _timeSlotsCache[dateStr];
+  if (_timeSlotsCache['default'] && !_timeSlotsCache[dateStr]) {
+    // defaultは取得済みだが日別未取得の場合はdefaultを返す
+  }
+  try {
+    const url = SHOP_CONFIG.gasUrl + '?action=getTimeSlots&date=' + dateStr;
+    const res = await fetch(url);
+    const json = await res.json();
+    _timeSlotsCache[dateStr] = json.slots || null;
+    return _timeSlotsCache[dateStr];
+  } catch(e) {
+    return null;
+  }
+}
+
+// defaultスロット取得（初期化時）
+async function fetchDefaultTimeSlots() {
+  if (_timeSlotsCacheLoaded) return;
+  try {
+    const url = SHOP_CONFIG.gasUrl + '?action=getTimeSlots&date=default';
+    const res = await fetch(url);
+    const json = await res.json();
+    _timeSlotsCache['default'] = json.slots || null;
+    _timeSlotsCacheLoaded = true;
+  } catch(e) {
+    _timeSlotsCacheLoaded = true;
+  }
+}
+
 function generateTimeSlots(dateStr) {
   const container = document.getElementById("timeSlots");
   container.innerHTML = "";
@@ -550,15 +585,35 @@ function generateTimeSlots(dateStr) {
   // ラスト受付（分換算）
   const lastMins = lastBookHour * 60 + lastBookMin;
 
-  // スロット生成
+  // スロット生成（GASキャッシュがあればそれを使用）
+  const _cachedSlots = _timeSlotsCache[dateStr] || _timeSlotsCache['default'] || null;
+
+  // GASスロットがある場合はそのリストを使用、ない場合は従来ロジック
+  const _slotList = _cachedSlots ? _cachedSlots : (() => {
+    const arr = [];
+    let t2 = openHour * 60;
+    while (t2 <= lastBookHour * 60 + lastBookMin) {
+      const h2 = String(Math.floor(t2 / 60)).padStart(2, "0");
+      const m2 = String(t2 % 60).padStart(2, "0");
+      arr.push(`${h2}:${m2}`);
+      t2 += slotMinutes;
+    }
+    return arr;
+  })();
+
+  // GASスロットがある場合は非同期でキャッシュ更新（次回表示時に反映）
+  if (!_timeSlotsCache[dateStr] && SHOP_CONFIG.gasUrl) {
+    fetchTimeSlots(dateStr).then(() => {});
+  }
+
   let t = openHour * 60;
   const endMins = closeHour * 60;
 
-  while (t <= lastMins) {
-    const h = String(Math.floor(t / 60)).padStart(2, "0");
-    const m = String(t % 60).padStart(2, "0");
-    const timeStr = `${h}:${m}`;
-
+  // _slotListを使って順番にスロット生成
+  for (const _slotTime of _slotList) {
+    const timeStr = _slotTime;
+    const [_h, _m] = timeStr.split(':').map(Number);
+    t = _h * 60 + _m;
     const el = document.createElement("div");
     el.className = "time-slot";
     el.setAttribute("data-time", timeStr);
@@ -966,8 +1021,29 @@ function showAdminPage() {
     '<div style="max-width:600px;margin:0 auto;background:white;border-radius:16px;padding:24px;">' +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:2px solid #f0f0f0;padding-bottom:12px;">' +
     '<div style="font-size:1.1rem;font-weight:900;color:#1a2a3a;">🔐 予約管理（' + active.length + '件）</div>' +
+    '<div style="display:flex;gap:8px;">' +
+    '<button onclick="toggleTimeSlotsPanel()" style="border:none;background:#e8f0fe;color:#2c5fa8;border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:700;font-size:0.85rem;">⏰ 営業時間設定</button>' +
     '<button onclick="document.getElementById(\'adminOverlay\').remove()" style="border:none;background:#eee;border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:700;">✕ 閉じる</button>' +
-    '</div>' + addForm + rows + '</div></div>';
+    '</div>' +
+    '</div>' +
+    // 営業時間設定パネル
+    '<div id="timeSlotsPanel" style="display:none;margin-bottom:16px;background:#f0f4ff;border:2px solid #6c8ebf;border-radius:12px;padding:16px;">' +
+    '<div style="font-weight:900;color:#2c3e6a;font-size:0.95rem;margin-bottom:12px;">⏰ 営業時間設定</div>' +
+    '<div style="margin-bottom:12px;">' +
+    '<label style="display:flex;align-items:center;gap:10px;font-size:0.88rem;margin-bottom:8px;">' +
+    '<input type="radio" name="tsScopeRad" value="default" checked onchange="tsScopeChange()"> 毎日固定' +
+    '</label>' +
+    '<label style="display:flex;align-items:center;gap:10px;font-size:0.88rem;">' +
+    '<input type="radio" name="tsScopeRad" value="date" onchange="tsScopeChange()"> この日のみ　' +
+    '<input type="date" id="tsScopeDate" value="' + today + '" style="padding:4px 8px;border:1px solid #ccc;border-radius:6px;font-size:0.85rem;">' +
+    '</label>' +
+    '</div>' +
+    '<div style="font-size:0.82rem;color:#555;margin-bottom:8px;">表示する時間枠を選択してください：</div>' +
+    '<div id="tsSlotsCheck" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;"></div>' +
+    '<button onclick="saveTimeSlotsSetting()" style="width:100%;padding:10px;background:linear-gradient(135deg,#2c5fa8,#4a7fd4);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.9rem;">💾 保存する</button>' +
+    '<div id="tsSaveMsg" style="text-align:center;font-size:0.82rem;color:#27ae60;margin-top:8px;display:none;">✅ 保存しました</div>' +
+    '</div>' +
+    addForm + rows + '</div></div>';
   document.body.appendChild(overlay);
   // 管理フォームの初期スロット表示
   setTimeout(() => adminRenderSlots(), 50);
@@ -1018,6 +1094,90 @@ function adminAddReservation() {
 
 // 管理者用時間枠レンダリング
 window._admSelectedTime = "";
+// ── 営業時間設定 関数群 ──────────────────────────
+
+// 全スロット定義（08:00〜19:30）
+const ALL_TIME_SLOTS = [
+  '08:00','08:30','09:00','09:30',
+  '10:00','10:30','11:00','11:30',
+  '12:00','12:30','13:00','13:30',
+  '14:00','14:30','15:00','15:30',
+  '16:00','16:30','17:00','17:30',
+  '18:00','18:30','19:00','19:30'
+];
+
+function toggleTimeSlotsPanel() {
+  const panel = document.getElementById('timeSlotsPanel');
+  if (!panel) return;
+  const isVisible = panel.style.display !== 'none';
+  panel.style.display = isVisible ? 'none' : 'block';
+  if (!isVisible) renderTsSlotsCheck();
+}
+
+function tsScopeChange() {
+  renderTsSlotsCheck();
+}
+
+async function renderTsSlotsCheck() {
+  const scope = document.querySelector('input[name="tsScopeRad"]:checked')?.value || 'default';
+  const date  = scope === 'date' ? (document.getElementById('tsScopeDate')?.value || 'default') : 'default';
+
+  // GASから現在の設定を取得
+  let currentSlots = null;
+  if (SHOP_CONFIG.gasUrl) {
+    try {
+      const res = await fetch(SHOP_CONFIG.gasUrl + '?action=getTimeSlots&date=' + date);
+      const json = await res.json();
+      currentSlots = json.slots || null;
+    } catch(e) {}
+  }
+  if (!currentSlots) currentSlots = ALL_TIME_SLOTS.slice(0, 21); // デフォルト08:00〜18:00
+
+  const container = document.getElementById('tsSlotsCheck');
+  if (!container) return;
+  container.innerHTML = '';
+  ALL_TIME_SLOTS.forEach(t => {
+    const checked = currentSlots.includes(t) ? 'checked' : '';
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:0.85rem;cursor:pointer;';
+    label.innerHTML = '<input type="checkbox" value="' + t + '" ' + checked + ' style="accent-color:#2c5fa8;"> ' + t;
+    container.appendChild(label);
+  });
+}
+
+async function saveTimeSlotsSetting() {
+  const scope = document.querySelector('input[name="tsScopeRad"]:checked')?.value || 'default';
+  const date  = scope === 'date' ? (document.getElementById('tsScopeDate')?.value || 'default') : 'default';
+  const checks = document.querySelectorAll('#tsSlotsCheck input[type=checkbox]:checked');
+  const slots  = Array.from(checks).map(c => c.value).join(',');
+
+  if (!slots) { alert('最低1つは選択してください'); return; }
+  if (!SHOP_CONFIG.gasUrl) { alert('GAS URLが設定されていません'); return; }
+
+  try {
+    const params = new URLSearchParams({ action: 'saveTimeSlots', date, slots });
+    const res = await fetch(SHOP_CONFIG.gasUrl, { method: 'POST', body: params });
+    const json = await res.json();
+    if (json.status === 'ok') {
+      // キャッシュ更新
+      _timeSlotsCache[date] = slots.split(',');
+      // 予約ページのスロット再描画
+      const dateVal = document.getElementById('reserveDate')?.value;
+      if (dateVal) generateTimeSlots(dateVal);
+      // 保存完了メッセージ
+      const msg = document.getElementById('tsSaveMsg');
+      if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 3000); }
+    }
+  } catch(e) {
+    alert('保存に失敗しました: ' + e.message);
+  }
+}
+
+// ページ初期化時にdefaultスロットをフェッチ
+document.addEventListener('DOMContentLoaded', () => {
+  fetchDefaultTimeSlots();
+});
+
 function adminRenderSlots() {
   const dateVal = document.getElementById("adm_date") ? document.getElementById("adm_date").value : "";
   const menu    = document.getElementById("adm_menu")  ? document.getElementById("adm_menu").value  : "";
