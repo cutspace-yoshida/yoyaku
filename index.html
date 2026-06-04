@@ -409,14 +409,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.48</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.49</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.48
+// バージョン: v3.49
 // 営業時間設定キャッシュ
 let _timeSlotsCache = {};  // { 'default': [...], '2026-06-01': [...] }
 let _timeSlotsCacheLoaded = false;
@@ -1033,6 +1033,13 @@ function showAdminPage() {
     '<label style="display:flex;align-items:center;gap:10px;font-size:0.88rem;margin-bottom:8px;">' +
     '<input type="radio" name="tsScopeRad" value="default" checked onchange="tsScopeChange()"> 毎日固定' +
     '</label>' +
+    '<label style="display:flex;align-items:center;gap:10px;font-size:0.88rem;margin-bottom:8px;">' +
+    '<input type="radio" name="tsScopeRad" value="dow" onchange="tsScopeChange()"> 曜日別　' +
+    '<select id="tsScopeDow" style="padding:4px 8px;border:1px solid #ccc;border-radius:6px;font-size:0.85rem;" onchange="tsScopeChange()">' +
+    '<option value="月">月曜日</option><option value="火">火曜日</option><option value="水">水曜日</option>' +
+    '<option value="木">木曜日</option><option value="金">金曜日</option><option value="土">土曜日</option><option value="日">日曜日</option>' +
+    '</select>' +
+    '</label>' +
     '<label style="display:flex;align-items:center;gap:10px;font-size:0.88rem;">' +
     '<input type="radio" name="tsScopeRad" value="date" onchange="tsScopeChange()"> この日のみ　' +
     '<input type="date" id="tsScopeDate" value="' + today + '" style="padding:4px 8px;border:1px solid #ccc;border-radius:6px;font-size:0.85rem;">' +
@@ -1120,13 +1127,15 @@ function tsScopeChange() {
 
 async function renderTsSlotsCheck() {
   const scope = document.querySelector('input[name="tsScopeRad"]:checked')?.value || 'default';
-  const date  = scope === 'date' ? (document.getElementById('tsScopeDate')?.value || 'default') : 'default';
+  let queryKey = 'default';
+  if (scope === 'date') queryKey = document.getElementById('tsScopeDate')?.value || 'default';
+  else if (scope === 'dow') queryKey = '曜日_' + (document.getElementById('tsScopeDow')?.value || '月');
 
-  // GASから現在の設定を取得
+  // GASから現在の設定を取得（その設定キーのみ直接取得）
   let currentSlots = null;
   if (SHOP_CONFIG.gasUrl) {
     try {
-      const res = await fetch(SHOP_CONFIG.gasUrl + '?action=getTimeSlots&date=' + date);
+      const res = await fetch(SHOP_CONFIG.gasUrl + '?action=getTimeSlotsExact&key=' + encodeURIComponent(queryKey));
       const json = await res.json();
       currentSlots = json.slots || null;
     } catch(e) {}
@@ -1147,7 +1156,9 @@ async function renderTsSlotsCheck() {
 
 async function saveTimeSlotsSetting() {
   const scope = document.querySelector('input[name="tsScopeRad"]:checked')?.value || 'default';
-  const date  = scope === 'date' ? (document.getElementById('tsScopeDate')?.value || 'default') : 'default';
+  let date = 'default';
+  if (scope === 'date') date = document.getElementById('tsScopeDate')?.value || 'default';
+  else if (scope === 'dow') date = '曜日_' + (document.getElementById('tsScopeDow')?.value || '月');
   const checks = document.querySelectorAll('#tsSlotsCheck input[type=checkbox]:checked');
   const slots  = Array.from(checks).map(c => c.value).join(',');
 
