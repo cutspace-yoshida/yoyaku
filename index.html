@@ -46,6 +46,52 @@
   .main { max-width: 720px; margin: 0 auto; padding: 20px 16px 60px; }
 
   /* ステップ */
+  /* ── 入口選択画面 ── */
+  #entrySection { padding: 8px 0 24px; }
+  .entry-title { text-align: center; font-size: 1rem; color: var(--muted); margin-bottom: 20px; letter-spacing: 0.5px; }
+  .entry-datetime-date { font-size: 1.05rem; font-weight: 700; color: var(--text); letter-spacing: 0.5px; }
+  .entry-datetime-time { font-size: 1.7rem; font-weight: 700; color: var(--primary); letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+  .entry-datetime-open { font-size: 0.78rem; color: var(--accent); font-weight: 700; margin-top: 2px; }
+  .entry-buttons { display: flex; gap: 14px; justify-content: center; }
+  .entry-btn {
+    flex: 1; max-width: 180px;
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 12px 18px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    font-family: inherit;
+  }
+  .entry-btn:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(14,26,36,0.12); transform: translateY(-2px); }
+  .entry-btn .entry-icon { font-size: 2rem; margin-bottom: 8px; }
+  .entry-btn .entry-label { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+  .entry-btn .entry-sub { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+  .entry-btn.returning { border-color: var(--accent); background: #fffdf7; }
+  .entry-btn.returning .entry-label { color: var(--accent); }
+  .entry-btn.returning:hover { box-shadow: 0 4px 16px rgba(200,169,110,0.25); }
+
+  /* 前回データ確認カード（いつもの予約） */
+  #returningCard {
+    display: none;
+    background: white;
+    border: 1.5px solid var(--accent);
+    border-radius: 14px;
+    padding: 20px;
+    margin-top: 12px;
+  }
+  .returning-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  .returning-row:last-of-type { border-bottom: none; }
+  .returning-key { color: var(--muted); font-size: 0.82rem; }
+  .returning-val { font-weight: 700; color: var(--text); }
+  .returning-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .returning-actions button { flex: 1; padding: 11px 0; border-radius: 8px; font-family: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; border: none; transition: opacity 0.2s; }
+  .btn-proceed { background: var(--primary); color: white; }
+  .btn-proceed:hover { opacity: 0.85; }
+  .btn-change  { background: white; color: var(--muted); border: 1.5px solid var(--border) !important; }
+  .btn-change:hover { border-color: var(--primary) !important; color: var(--primary); }
+
   .steps { display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
   .step-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .step-circle { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border); background: white; color: var(--muted); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
@@ -184,6 +230,65 @@
 <div style="background:linear-gradient(135deg,#fff8e8,#fef3c7); border-left:4px solid #f0c060; padding:14px 20px; font-size:0.82rem; color:#7a5a00; text-align:center; letter-spacing:0.3px;"><div style="font-weight:900; font-size:0.9rem; margin-bottom:6px;">📞 当日のご予約はお電話にて承っております</div><div style="font-weight:700; margin-bottom:8px; font-size:0.78rem; color:#a07000;">ネット予約は<strong style="color:#c07000;">翌日以降</strong>のみ受け付けております。当日ご来店希望の方はお気軽にお電話ください。</div><a href="tel:0298874213" style="display:inline-block; background:#c07000; color:white; text-decoration:none; font-size:1rem; font-weight:900; padding:8px 24px; border-radius:30px; letter-spacing:1px;">📞 029-887-4213</a></div>
 
 <div class="main">
+
+  <!-- ── 入口選択画面 ── -->
+  <div id="entrySection">
+    <div id="entryDatetime" style="text-align:center; margin-bottom:14px; line-height:1.6;"></div>
+    <p class="entry-title">ご来店ありがとうございます</p>
+    <div class="entry-buttons">
+      <button class="entry-btn" onclick="selectEntry('new')">
+        <div class="entry-icon">✨</div>
+        <div class="entry-label">初めてのご来店</div>
+        <div class="entry-sub">はじめてのお客様</div>
+      </button>
+      <button class="entry-btn returning" onclick="selectEntry('returning')">
+        <div class="entry-icon">✂️</div>
+        <div class="entry-label">いつもの予約</div>
+        <div class="entry-sub">リピートのお客様</div>
+      </button>
+    </div>
+    <!-- 前回データ確認カード -->
+    <div id="returningCard">
+      <div id="returningRows"></div>
+      <div class="returning-actions">
+        <button class="btn-proceed" onclick="proceedWithLastData()">この内容で予約する</button>
+        <button class="btn-change"  onclick="changeMenu()">メニューを変更する</button>
+      </div>
+    </div>
+
+    <!-- ── 空き状況プレビュー ── -->
+    <div id="previewCard" style="margin-top:18px; background:white; border:1.5px solid var(--border); border-radius:14px; padding:18px 16px;">
+      <div style="font-size:0.95rem; font-weight:700; color:var(--text); margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+        <div style="width:28px;height:28px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:0.85rem;">📅</div>
+        ご希望の日時
+      </div>
+      <div style="background:#f0f4f8; border-left:3px solid var(--primary); border-radius:0 8px 8px 0; padding:8px 12px; font-size:0.78rem; color:var(--muted); margin-bottom:14px; line-height:1.6;">
+        📋 こちらは<strong style="color:var(--text);">空き状況の確認専用</strong>です。予約は上の「初めてのご来店」または「いつもの予約」からお進みください。
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:0.8rem; color:var(--muted); font-weight:600; display:block; margin-bottom:6px;">ご希望日 <span style="color:#e74c3c; font-size:0.75rem;">※必須</span></label>
+        <input type="date" id="previewDate" class="form-input" onchange="onPreviewDateChange()" style="margin:0;">
+        <div id="previewDayWarning" style="display:none; color:#c0392b; font-size:0.8rem; margin-top:6px; font-weight:700;">⚠️ この日は定休日のため予約できません</div>
+      </div>
+      <div>
+        <label style="font-size:0.8rem; color:var(--muted); font-weight:600; display:block; margin-bottom:6px;">ご希望時間 <span style="color:#e74c3c; font-size:0.75rem;">※必須</span></label>
+        <div id="previewTodayNotice" style="display:none; background:#fdecea; border:1px solid #f1948a; border-radius:10px; padding:10px 14px; font-size:0.8rem; color:#c0392b; font-weight:700; margin-bottom:8px;">
+          ⚠️ 当日はネット予約できません。以下は予約状況の<strong>確認のみ</strong>です。<br>
+          ご予約はお電話にて：<a href="tel:0298874213" style="color:#c0392b; text-decoration:none; font-weight:900;">029-887-4213</a>
+        </div>
+        <div class="time-slots" id="previewTimeSlots" style="min-height:60px;">
+          <div style="color:var(--muted); font-size:0.82rem; padding:16px 0; text-align:center;">日付を選択すると空き状況が表示されます</div>
+        </div>
+        <div class="slot-legend" style="margin-top:10px;">
+          <div class="legend-item"><div class="legend-dot ok"></div>予約可</div>
+          <div class="legend-item"><div class="legend-dot booked"></div>予約済</div>
+          <div class="legend-item"><div class="legend-dot selected"></div>選択中</div>
+          <div class="legend-item"><div class="legend-dot viewonly"></div>閲覧のみ</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 
   <div class="steps" id="stepsBar">
     <div class="step-item">
@@ -409,14 +514,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.49</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.50</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.49
+// バージョン: v3.50
 // 営業時間設定キャッシュ
 let _timeSlotsCache = {};  // { 'default': [...], '2026-06-01': [...] }
 let _timeSlotsCacheLoaded = false;
@@ -534,8 +639,10 @@ async function fetchDefaultTimeSlots() {
   }
 }
 
-function generateTimeSlots(dateStr) {
-  const container = document.getElementById("timeSlots");
+function generateTimeSlots(dateStr, targetId) {
+  targetId = targetId || "timeSlots";
+  const isPreview = (targetId === "previewTimeSlots");
+  const container = document.getElementById(targetId);
   container.innerHTML = "";
 
   const { openHour, closeHour, lastBookHour, lastBookMin, slotMinutes, serviceMins } = SHOP_CONFIG;
@@ -631,35 +738,44 @@ function generateTimeSlots(dateStr) {
 
     if (status === "ok") {
       el.textContent = timeStr;
-      el.onclick = () => {
-        // 選択メニューの施術枠数分チェック（重複防止）
-        const { slotMinutes } = SHOP_CONFIG;
-        const serviceSlots = getServiceSlots();
-        const [sh, sm] = timeStr.split(":").map(Number);
-        let conflict = null;
-        for (let i = 1; i < serviceSlots; i++) {
-          const checkMins = sh * 60 + sm + slotMinutes * i;
-          const ch = String(Math.floor(checkMins / 60)).padStart(2, "0");
-          const cm = String(checkMins % 60).padStart(2, "0");
-          const checkSlot = document.querySelector(`.time-slot[data-time="${ch}:${cm}"]`);
-          if (checkSlot && (checkSlot.classList.contains("booked") || checkSlot.classList.contains("blocked"))) {
-            conflict = `${ch}:${cm}`;
-            break;
+      if (isPreview) {
+        // プレビューモード：選択時刻を記憶（フォームへの引き継ぎ用）
+        el.onclick = () => {
+          container.querySelectorAll(".time-slot").forEach(s => s.classList.remove("selected"));
+          el.classList.add("selected");
+          previewSelectedTime = timeStr;
+        };
+      } else {
+        el.onclick = () => {
+          // 選択メニューの施術枠数分チェック（重複防止）
+          const { slotMinutes } = SHOP_CONFIG;
+          const serviceSlots = getServiceSlots();
+          const [sh, sm] = timeStr.split(":").map(Number);
+          let conflict = null;
+          for (let i = 1; i < serviceSlots; i++) {
+            const checkMins = sh * 60 + sm + slotMinutes * i;
+            const ch = String(Math.floor(checkMins / 60)).padStart(2, "0");
+            const cm = String(checkMins % 60).padStart(2, "0");
+            const checkSlot = document.querySelector(`#timeSlots .time-slot[data-time="${ch}:${cm}"]`);
+            if (checkSlot && (checkSlot.classList.contains("booked") || checkSlot.classList.contains("blocked"))) {
+              conflict = `${ch}:${cm}`;
+              break;
+            }
           }
-        }
-        if (conflict) {
-          const errMsg = `${timeStr} は施術中に ${conflict} の予約が重なるため選択できません。`;
-          document.getElementById("err-time").textContent = errMsg;
-          document.getElementById("err-time").style.display = "block";
-          const banner = document.getElementById("topErrorBanner");
-          banner.textContent = "⚠️ " + errMsg;
-          banner.style.display = "block";
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          setTimeout(() => { banner.style.display = "none"; }, 4000);
-          return;
-        }
-        selectTime(el, timeStr);
-      };
+          if (conflict) {
+            const errMsg = `${timeStr} は施術中に ${conflict} の予約が重なるため選択できません。`;
+            document.getElementById("err-time").textContent = errMsg;
+            document.getElementById("err-time").style.display = "block";
+            const banner = document.getElementById("topErrorBanner");
+            banner.textContent = "⚠️ " + errMsg;
+            banner.style.display = "block";
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            setTimeout(() => { banner.style.display = "none"; }, 4000);
+            return;
+          }
+          selectTime(el, timeStr);
+        };
+      }
     } else if (status === "booked") {
       el.textContent = timeStr;
       el.classList.add("booked");
@@ -889,6 +1005,9 @@ async function submitReservation() {
 
   // localStorageに保存（管理システム連携用）
   saveReservation(reservation);
+
+  // ★ 次回「いつもの予約」用に前回データを保存（v3.50）
+  saveLastBooking(selectedMenu, name, phone);
 
   loading.style.display = "none";
   showComplete(name, date);
@@ -1514,7 +1633,186 @@ function mergeBarberDataToReservations() {
   } catch(e) { console.warn("barberData統合エラー:", e); }
 }
 
+// ============================================================
+// ★ 入口選択ロジック（v3.50）
+// ============================================================
+const LAST_BOOKING_KEY = "csyLastBooking";
+let previewSelectedTime = ""; // 入口画面で選択した時刻
+
+// 入口画面 日付変更ハンドラ
+function onPreviewDateChange() {
+  const dateVal = document.getElementById("previewDate").value;
+  previewSelectedTime = "";
+  if (!dateVal) return;
+  const warn = document.getElementById("previewDayWarning");
+  if (isClosedDay(dateVal)) {
+    warn.style.display = "block";
+    document.getElementById("previewTimeSlots").innerHTML =
+      '<div style="color:#c0392b;font-size:0.85rem;padding:10px 0;font-weight:700;">⚠️ 定休日のため予約できません</div>';
+    return;
+  }
+  warn.style.display = "none";
+  const todayCheck = getTodayJST();
+  const notice = document.getElementById("previewTodayNotice");
+  if (notice) notice.style.display = (dateVal === todayCheck && !isTodayBookable()) ? "block" : "none";
+  generateTimeSlots(dateVal, "previewTimeSlots");
+}
+
+// トップ画面 リアルタイム日時表示
+function startEntryClock() {
+  const WEEK = ["日","月","火","水","木","金","土"];
+  function tick() {
+    const now = new Date(new Date().toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }));
+    const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${WEEK[now.getDay()]}）`;
+    const hh = String(now.getHours()).padStart(2,"0");
+    const mm = String(now.getMinutes()).padStart(2,"0");
+    const ss = String(now.getSeconds()).padStart(2,"0");
+    const closed = isClosedDay(new Date(now.getTime() + 9*60*60*1000).toISOString().slice(0,10));
+    const openLabel = closed ? "本日は定休日です" : "本日営業中";
+    const openColor = closed ? "color:#e74c3c;" : "";
+    const el = document.getElementById("entryDatetime");
+    if (el) el.innerHTML =
+      `<div class="entry-datetime-date">${dateStr}</div>`+
+      `<div class="entry-datetime-time">${hh}:${mm}:${ss}</div>`+
+      `<div class="entry-datetime-open" style="${openColor}">${openLabel}</div>`;
+  }
+  tick();
+  return setInterval(tick, 1000);
+} // 前回予約データ保存キー
+
+// 前回予約データを保存（予約完了時に呼ぶ）
+function saveLastBooking(menu, name, phone) {
+  localStorage.setItem(LAST_BOOKING_KEY, JSON.stringify({ menu, name, phone }));
+}
+
+// 入口ボタン選択
+function selectEntry(type) {
+  if (type === "new") {
+    // 初めてのご来店 → 入口を隠して既存フロー表示
+    document.getElementById("entrySection").style.display = "none";
+    document.getElementById("stepsBar").style.display     = "flex";
+    document.getElementById("formSection").style.display  = "block";
+    return;
+  }
+
+  // いつもの予約
+  const raw = localStorage.getItem(LAST_BOOKING_KEY);
+  if (!raw) {
+    // 前回データなし → 初めての方フローへ自動切替
+    showNoDataNotice();
+    return;
+  }
+  const last = JSON.parse(raw);
+
+  // 前回データカード表示
+  const rows = document.getElementById("returningRows");
+  rows.innerHTML = `
+    <div class="returning-row">
+      <span class="returning-key">前回のメニュー</span>
+      <span class="returning-val">${last.menu}</span>
+    </div>
+    <div class="returning-row">
+      <span class="returning-key">お名前</span>
+      <span class="returning-val">${last.name}</span>
+    </div>
+    <div class="returning-row">
+      <span class="returning-key">電話番号</span>
+      <span class="returning-val">${last.phone}</span>
+    </div>
+  `;
+  document.getElementById("returningCard").style.display = "block";
+}
+
+// 前回データなし通知
+function showNoDataNotice() {
+  const card = document.getElementById("returningCard");
+  card.innerHTML = `
+    <p style="text-align:center; color:var(--muted); font-size:0.88rem; margin-bottom:14px;">
+      📋 前回のご予約履歴が見つかりませんでした。<br>
+      <span style="font-size:0.8rem;">（機種変更・ブラウザ変更の場合はこちら）</span>
+    </p>
+    <button onclick="goNewFlow()" style="width:100%; padding:12px 0; background:var(--primary); color:white; border:none; border-radius:8px; font-family:inherit; font-size:0.9rem; font-weight:700; cursor:pointer;">
+      初めての方と同様に予約する
+    </button>
+  `;
+  card.style.display = "block";
+}
+
+// 前回データを反映してカレンダーへ進む
+function proceedWithLastData() {
+  const raw  = localStorage.getItem(LAST_BOOKING_KEY);
+  const last = raw ? JSON.parse(raw) : null;
+  if (last) {
+    // 名前・電話番号をフォームへ自動入力
+    document.getElementById("guestName").value  = last.name  || "";
+    document.getElementById("guestPhone").value = last.phone || "";
+    // メニューを自動選択
+    const menuOpts = document.querySelectorAll(".menu-option");
+    menuOpts.forEach(el => {
+      el.classList.remove("selected");
+      const nameEl = el.querySelector(".menu-name");
+      if (nameEl && nameEl.textContent.replace(/^[^\w\u3040-\u9fff]+/, "").trim() === last.menu.trim()) {
+        el.classList.add("selected");
+        selectedMenu = last.menu;
+        // エラー表示を消す
+        const err = document.getElementById("err-menu");
+        if (err) err.style.display = "none";
+      }
+    });
+  }
+  // 入口を隠して既存フロー表示（カレンダーまでスクロール）
+  goNewFlow();
+  // 日付入力欄へスムーズスクロール
+  setTimeout(() => {
+    const dateEl = document.getElementById("reserveDate");
+    if (dateEl) dateEl.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 150);
+}
+
+// メニュー変更 → 通常フロー（formSection先頭へ）
+function changeMenu() {
+  goNewFlow();
+  setTimeout(() => {
+    const menuCard = document.querySelector(".card");
+    if (menuCard) menuCard.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 150);
+}
+
+// 入口を閉じて通常フロー表示（プレビューで選択した日時を引き継ぐ）
+function goNewFlow() {
+  // プレビューで選択した日付を引き継ぎ
+  const previewDateVal = document.getElementById("previewDate").value;
+  if (previewDateVal) {
+    const formDate = document.getElementById("reserveDate");
+    formDate.value = previewDateVal;
+    // スロット再生成（フォーム側）
+    syncReservationsFromGAS(function() {
+      mergeBarberDataToReservations();
+      generateTimeSlots(previewDateVal, "timeSlots");
+      // 入口で時刻を選択していた場合、フォーム側でも同一スロットを選択状態にする
+      if (previewSelectedTime) {
+        setTimeout(() => {
+          const slot = document.querySelector(`#timeSlots .time-slot[data-time="${previewSelectedTime}"]`);
+          if (slot && !slot.classList.contains("booked") && !slot.classList.contains("blocked") && !slot.classList.contains("past-view")) {
+            selectTime(slot, previewSelectedTime);
+          }
+        }, 300);
+      }
+    });
+  }
+  document.getElementById("entrySection").style.display = "none";
+  document.getElementById("stepsBar").style.display     = "flex";
+  document.getElementById("formSection").style.display  = "block";
+}
+
 window.onload = function() {
+  // ── 入口画面のみ表示、既存フローは初期非表示（v3.50）──
+  startEntryClock();
+  document.getElementById("stepsBar").style.display      = "none";
+  document.getElementById("formSection").style.display   = "none";
+  document.getElementById("confirmSection").style.display = "none";
+  document.getElementById("completeSection").style.display = "none";
+
   // 定休日でない最初の日を計算（当日からスタート・当日の空き確認のため）
   // ★ 日本時間(JST)ベースで計算することでUTCずれを防ぐ
   const today = getTodayJST();
@@ -1542,6 +1840,13 @@ window.onload = function() {
   syncReservationsFromGAS(function() {
     mergeBarberDataToReservations(); // ★ 管理システムのnextDate予約を統合
     if (defaultDate) generateTimeSlots(defaultDate);
+    // ★ 入口プレビュー用スロット初期表示
+    const previewDateEl = document.getElementById("previewDate");
+    if (previewDateEl) {
+      previewDateEl.value = defaultDate;
+      previewDateEl.min   = today;
+      if (defaultDate) generateTimeSlots(defaultDate, "previewTimeSlots");
+    }
   });
   // ★ 3分ごとに自動同期（管理システムの追加・キャンセルを反映）
   setInterval(function() {
