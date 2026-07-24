@@ -514,14 +514,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.50</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.51</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.50
+// バージョン: v3.51
 // 営業時間設定キャッシュ
 let _timeSlotsCache = {};  // { 'default': [...], '2026-06-01': [...] }
 let _timeSlotsCacheLoaded = false;
@@ -1153,21 +1153,20 @@ function showAdminPage() {
     '<input type="radio" name="tsScopeRad" value="default" checked onchange="tsScopeChange()"> 毎日固定' +
     '</label>' +
     '<label style="display:flex;align-items:center;gap:10px;font-size:0.88rem;margin-bottom:8px;">' +
-    '<input type="radio" name="tsScopeRad" value="dow" onchange="tsScopeChange()"> 曜日別　' +
-    '<select id="tsScopeDow" style="padding:4px 8px;border:1px solid #ccc;border-radius:6px;font-size:0.85rem;" onchange="tsScopeChange()">' +
-    '<option value="月">月曜日</option><option value="火">火曜日</option><option value="水">水曜日</option>' +
-    '<option value="木">木曜日</option><option value="金">金曜日</option><option value="土">土曜日</option><option value="日">日曜日</option>' +
-    '</select>' +
+    '<input type="radio" name="tsScopeRad" value="dow" onchange="tsScopeChange()"> 曜日別（毎週固定）' +
     '</label>' +
     '<label style="display:flex;align-items:center;gap:10px;font-size:0.88rem;">' +
     '<input type="radio" name="tsScopeRad" value="date" onchange="tsScopeChange()"> この日のみ　' +
     '<input type="date" id="tsScopeDate" value="' + today + '" style="padding:4px 8px;border:1px solid #ccc;border-radius:6px;font-size:0.85rem;">' +
     '</label>' +
     '</div>' +
+    '<div id="tsSlotsCheckWrap">' +
     '<div style="font-size:0.82rem;color:#555;margin-bottom:8px;">表示する時間枠を選択してください：</div>' +
     '<div id="tsSlotsCheck" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;"></div>' +
     '<button onclick="saveTimeSlotsSetting()" style="width:100%;padding:10px;background:linear-gradient(135deg,#2c5fa8,#4a7fd4);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.9rem;">💾 保存する</button>' +
     '<div id="tsSaveMsg" style="text-align:center;font-size:0.82rem;color:#27ae60;margin-top:8px;display:none;">✅ 保存しました</div>' +
+    '</div>' +
+    '<div id="tsDowWrap" style="display:none;"></div>' +
     '</div>' +
     addForm + rows + '</div></div>';
   document.body.appendChild(overlay);
@@ -1232,6 +1231,18 @@ const ALL_TIME_SLOTS = [
   '18:00','18:30','19:00','19:30'
 ];
 
+// 曜日リスト（表示順・定休日情報付き）
+// closedNote: 常時定休の曜日には固定文言、月曜のみ「第2・第3月曜は定休」の可変注記
+const DOW_LIST = [
+  { key: '月', label: '月曜日', closedNote: '※第2・第3月曜は定休日' },
+  { key: '火', label: '火曜日', closedNote: '🚫 毎週定休日' },
+  { key: '水', label: '水曜日', closedNote: '' },
+  { key: '木', label: '木曜日', closedNote: '' },
+  { key: '金', label: '金曜日', closedNote: '' },
+  { key: '土', label: '土曜日', closedNote: '' },
+  { key: '日', label: '日曜日', closedNote: '' }
+];
+
 function toggleTimeSlotsPanel() {
   const panel = document.getElementById('timeSlotsPanel');
   if (!panel) return;
@@ -1244,11 +1255,24 @@ function tsScopeChange() {
   renderTsSlotsCheck();
 }
 
+// 毎日固定／この日のみ、と 曜日別（7曜日一覧）で表示を切り替える
 async function renderTsSlotsCheck() {
   const scope = document.querySelector('input[name="tsScopeRad"]:checked')?.value || 'default';
+  const singleWrap = document.getElementById('tsSlotsCheckWrap');
+  const dowWrap = document.getElementById('tsDowWrap');
+
+  if (scope === 'dow') {
+    if (singleWrap) singleWrap.style.display = 'none';
+    if (dowWrap) dowWrap.style.display = 'block';
+    await renderDowSlotsAll();
+    return;
+  }
+
+  if (singleWrap) singleWrap.style.display = 'block';
+  if (dowWrap) dowWrap.style.display = 'none';
+
   let queryKey = 'default';
   if (scope === 'date') queryKey = document.getElementById('tsScopeDate')?.value || 'default';
-  else if (scope === 'dow') queryKey = '曜日_' + (document.getElementById('tsScopeDow')?.value || '月');
 
   // GASから現在の設定を取得（その設定キーのみ直接取得）
   let currentSlots = null;
@@ -1277,7 +1301,6 @@ async function saveTimeSlotsSetting() {
   const scope = document.querySelector('input[name="tsScopeRad"]:checked')?.value || 'default';
   let date = 'default';
   if (scope === 'date') date = document.getElementById('tsScopeDate')?.value || 'default';
-  else if (scope === 'dow') date = '曜日_' + (document.getElementById('tsScopeDow')?.value || '月');
   const checks = document.querySelectorAll('#tsSlotsCheck input[type=checkbox]:checked');
   const slots  = Array.from(checks).map(c => c.value).join(',');
 
@@ -1296,6 +1319,100 @@ async function saveTimeSlotsSetting() {
       if (dateVal) generateTimeSlots(dateVal);
       // 保存完了メッセージ
       const msg = document.getElementById('tsSaveMsg');
+      if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 3000); }
+    }
+  } catch(e) {
+    alert('保存に失敗しました: ' + e.message);
+  }
+}
+
+// ============================================================
+// ★ 曜日別（毎週固定）7曜日一覧表示（v3.51）
+// 定休日（毎週火曜・第2/第3月曜）は無視せず、各曜日の見出しに注記を表示する。
+// 実際の予約可否は generateTimeSlots 側の isClosedDay() 判定が常に優先されるため、
+// ここで曜日別スロットを設定しても定休日の予約枠は開放されない。
+// ============================================================
+async function renderDowSlotsAll() {
+  const dowWrap = document.getElementById('tsDowWrap');
+  if (!dowWrap) return;
+  dowWrap.innerHTML = '<div style="text-align:center;color:#888;font-size:0.82rem;padding:10px 0;">読み込み中…</div>';
+
+  // 7曜日分を並列取得
+  const results = await Promise.all(DOW_LIST.map(async (d) => {
+    let slots = null;
+    if (SHOP_CONFIG.gasUrl) {
+      try {
+        const res = await fetch(SHOP_CONFIG.gasUrl + '?action=getTimeSlotsExact&key=' + encodeURIComponent('曜日_' + d.key));
+        const json = await res.json();
+        slots = json.slots || null;
+      } catch(e) {}
+    }
+    if (!slots) slots = ALL_TIME_SLOTS.slice(0, 21); // デフォルト08:00〜18:00
+    return { key: d.key, label: d.label, closedNote: d.closedNote, slots };
+  }));
+
+  dowWrap.innerHTML = '';
+  results.forEach(d => {
+    const box = document.createElement('div');
+    box.style.cssText = 'background:white;border:1px solid #d8e0f0;border-radius:10px;padding:12px;margin-bottom:10px;';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;';
+    header.innerHTML = '<span style="font-weight:900;color:#2c3e6a;font-size:0.9rem;">' + d.label + '</span>' +
+      (d.closedNote ? '<span style="font-size:0.75rem;color:#c0392b;font-weight:700;">' + d.closedNote + '</span>' : '');
+    box.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;';
+    grid.id = 'tsDowSlots_' + d.key;
+    ALL_TIME_SLOTS.forEach(t => {
+      const checked = d.slots.includes(t) ? 'checked' : '';
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:0.82rem;cursor:pointer;';
+      label.innerHTML = '<input type="checkbox" value="' + t + '" ' + checked + ' style="accent-color:#2c5fa8;"> ' + t;
+      grid.appendChild(label);
+    });
+    box.appendChild(grid);
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = '💾 ' + d.label + 'を保存する';
+    saveBtn.style.cssText = 'width:100%;padding:8px;background:linear-gradient(135deg,#2c5fa8,#4a7fd4);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.85rem;';
+    saveBtn.onclick = () => saveDowSlotsSetting(d.key, d.label);
+    box.appendChild(saveBtn);
+
+    const msg = document.createElement('div');
+    msg.id = 'tsDowSaveMsg_' + d.key;
+    msg.style.cssText = 'text-align:center;font-size:0.8rem;color:#27ae60;margin-top:6px;display:none;';
+    msg.textContent = '✅ 保存しました';
+    box.appendChild(msg);
+
+    dowWrap.appendChild(box);
+  });
+}
+
+// 曜日ごとに個別保存（A案）
+async function saveDowSlotsSetting(dowKey, dowLabel) {
+  const grid = document.getElementById('tsDowSlots_' + dowKey);
+  if (!grid) return;
+  const checks = grid.querySelectorAll('input[type=checkbox]:checked');
+  const slots = Array.from(checks).map(c => c.value).join(',');
+
+  if (!slots) { alert('最低1つは選択してください（' + dowLabel + '）'); return; }
+  if (!SHOP_CONFIG.gasUrl) { alert('GAS URLが設定されていません'); return; }
+
+  const dateKey = '曜日_' + dowKey;
+  try {
+    const params = new URLSearchParams({ action: 'saveTimeSlots', date: dateKey, slots });
+    const res = await fetch(SHOP_CONFIG.gasUrl, { method: 'POST', body: params });
+    const json = await res.json();
+    if (json.status === 'ok') {
+      // キャッシュ更新
+      _timeSlotsCache[dateKey] = slots.split(',');
+      // 予約ページのスロット再描画（表示中の日付がこの曜日なら反映）
+      const dateVal = document.getElementById('reserveDate')?.value;
+      if (dateVal) generateTimeSlots(dateVal);
+      // 保存完了メッセージ
+      const msg = document.getElementById('tsDowSaveMsg_' + dowKey);
       if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 3000); }
     }
   } catch(e) {
