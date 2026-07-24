@@ -514,14 +514,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.51</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.52</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.51
+// バージョン: v3.52
 // 営業時間設定キャッシュ
 let _timeSlotsCache = {};  // { 'default': [...], '2026-06-01': [...] }
 let _timeSlotsCacheLoaded = false;
@@ -1965,14 +1965,14 @@ window.onload = function() {
       if (defaultDate) generateTimeSlots(defaultDate, "previewTimeSlots");
     }
   });
-  // ★ 3分ごとに自動同期（管理システムの追加・キャンセルを反映）
+  // ★ 30秒ごとに自動同期（管理システムの時間変更・追加・キャンセルを反映）（v3.52で3分→30秒に短縮）
   setInterval(function() {
     const dateVal = document.getElementById("reserveDate").value;
     syncReservationsFromGAS(function() {
       mergeBarberDataToReservations(); // ★ 管理システムのnextDate予約を統合
       if (dateVal) generateTimeSlots(dateVal);
     });
-  }, 3 * 60 * 1000);
+  }, 30 * 1000);
 };
 </script>
 </body>
