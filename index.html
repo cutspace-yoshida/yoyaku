@@ -146,7 +146,7 @@
   .legend-dot.selected { background: var(--primary); border-color: var(--primary); }
   .legend-dot.viewonly { background: #f0f0f0; border-color: #bbb; }
 
-  /* メニュー */
+  /* メニュー（従来の全件一覧・「すべて見る」展開用） */
   .menu-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .menu-option { border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 12px; cursor: pointer; background: #fafafa; transition: 0.15s; }
   .menu-option:hover { border-color: var(--accent); background: #fdf8f0; }
@@ -156,6 +156,64 @@
   .menu-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
   .menu-price { font-size: 0.8rem; color: var(--accent2); font-weight: 700; }
   .menu-desc { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+  /* ── 3層メニュー構造（v3.55）── */
+  #menuStep1 { display: block; }
+  #menuStepAll { display: none; }
+
+  /* 層1：おすすめ */
+  .menu-recommend-card {
+    border: 2px solid var(--accent); border-radius: 14px; padding: 16px 14px;
+    background: linear-gradient(135deg, #fffaf0 0%, #fdf3e0 100%);
+    cursor: pointer; transition: 0.15s; margin-bottom: 16px; position: relative;
+  }
+  .menu-recommend-card:hover { box-shadow: 0 4px 14px rgba(200,169,110,0.35); transform: translateY(-1px); }
+  .menu-recommend-card.selected { border-color: var(--primary); background: linear-gradient(135deg, #1a2a3a 0%, #2c4a6e 100%); color: white; }
+  .menu-recommend-card.selected .menu-recommend-price { color: var(--accent); }
+  .menu-recommend-card.selected .menu-recommend-desc { color: rgba(255,255,255,0.65); }
+  .menu-recommend-badge {
+    position: absolute; top: -10px; left: 14px; background: var(--accent); color: #1a2a3a;
+    font-size: 0.65rem; font-weight: 900; letter-spacing: 1px; padding: 3px 10px; border-radius: 20px;
+  }
+  .menu-recommend-name { font-size: 1.05rem; font-weight: 900; margin-top: 4px; }
+  .menu-recommend-price { font-size: 0.95rem; color: var(--accent2); font-weight: 700; margin-top: 4px; }
+  .menu-recommend-desc { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  /* 層2：カテゴリタイル */
+  .menu-cat-label { font-size: 0.82rem; color: var(--muted); font-weight: 700; margin-bottom: 10px; }
+  .menu-cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .menu-cat-tile {
+    border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 10px; text-align: center;
+    cursor: pointer; background: #fafafa; transition: 0.15s;
+  }
+  .menu-cat-tile:hover { border-color: var(--primary); background: #f2f6fa; }
+  .menu-cat-tile.open { border-color: var(--primary); background: #eef3f8; box-shadow: inset 0 0 0 1.5px var(--primary); }
+  .menu-cat-tile.muted { background: #f5f5f5; border-color: #e2e2e2; }
+  .menu-cat-icon { font-size: 1.4rem; margin-bottom: 4px; }
+  .menu-cat-name { font-size: 0.82rem; font-weight: 700; color: var(--text); line-height: 1.4; }
+  .menu-cat-tile.muted .menu-cat-name { color: var(--muted); font-weight: 600; }
+
+  /* 層3：カテゴリ内メニュー展開（アコーディオン） */
+  .menu-cat-panel {
+    display: none; margin-top: 10px; padding: 12px; background: #f9fafb;
+    border: 1px solid var(--border); border-radius: 12px;
+  }
+  .menu-cat-panel.open { display: block; animation: catPanelOpen 0.2s ease; }
+  @keyframes catPanelOpen { from { opacity:0; transform: translateY(-4px);} to { opacity:1; transform: translateY(0);} }
+  .menu-cat-panel .menu-options { grid-template-columns: 1fr; gap: 8px; }
+
+  /* すべて見るリンク */
+  .menu-showall-link {
+    text-align: center; margin-top: 14px; font-size: 0.78rem; color: var(--muted);
+    text-decoration: underline; cursor: pointer;
+  }
+  .menu-showall-link:hover { color: var(--primary); }
+  .menu-back-link {
+    display: inline-block; margin-bottom: 12px; font-size: 0.78rem; color: var(--muted);
+    text-decoration: underline; cursor: pointer;
+  }
+  .menu-back-link:hover { color: var(--primary); }
+
 
   /* 注意書き */
   .notice { background: #fff8e8; border: 1px solid #f0c060; border-radius: 10px; padding: 12px 14px; font-size: 0.78rem; color: #7a5a00; line-height: 1.7; margin-bottom: 16px; }
@@ -237,7 +295,7 @@
   #sameDayNoticeIcon.pulse-anim { animation: sameDayNoticePulse 0.55s ease-in-out 2; }
 </style>
 <script>
-  // ★ ページ読み込み時に1回だけアイコンをパルスさせ、見落とし防止（v3.54）
+  // ★ ページ読み込み時に1回だけアイコンをパルスさせ、見落とし防止（v3.55）
   window.addEventListener('DOMContentLoaded', function() {
     const icon = document.getElementById('sameDayNoticeIcon');
     if (icon) { setTimeout(function(){ icon.classList.add('pulse-anim'); }, 400); }
@@ -353,7 +411,117 @@
 
     <div class="card">
       <div class="card-title"><div class="icon">✂</div>ご希望メニュー <span style="font-size:0.7rem; color:var(--muted); font-weight:400; margin-left:4px;">※必須</span></div>
-      <div class="menu-options">
+
+      <!-- ── 層1〜2：おすすめ＋カテゴリ（v3.55） ── -->
+      <div id="menuStep1">
+        <div class="menu-recommend-card" onclick="selectMenu(this,'カットセット')">
+          <span class="menu-recommend-badge">⭐ おすすめ</span>
+          <div class="menu-recommend-name">✂ カットセット</div>
+          <div class="menu-recommend-price">¥4,200</div>
+          <div class="menu-recommend-desc">人気No.1・当店の基本メニュー（カット＋シャンプー＋顔そり＋仕上げ）</div>
+        </div>
+
+        <div class="menu-cat-label">カテゴリからお選びください</div>
+        <div class="menu-cat-grid">
+          <div class="menu-cat-tile" id="catTile-cut" onclick="toggleMenuCategory('cut')">
+            <div class="menu-cat-icon">✂</div>
+            <div class="menu-cat-name">カット系</div>
+          </div>
+          <div class="menu-cat-tile" id="catTile-perm" onclick="toggleMenuCategory('perm')">
+            <div class="menu-cat-icon">🎨</div>
+            <div class="menu-cat-name">カット＋<br>パーマ・カラー</div>
+          </div>
+          <div class="menu-cat-tile" id="catTile-face" onclick="toggleMenuCategory('face')">
+            <div class="menu-cat-icon">🪒</div>
+            <div class="menu-cat-name">顔そり</div>
+          </div>
+          <div class="menu-cat-tile muted" id="catTile-other" onclick="toggleMenuCategory('other')">
+            <div class="menu-cat-icon">💬</div>
+            <div class="menu-cat-name">その他・相談</div>
+          </div>
+        </div>
+
+        <!-- カテゴリ：カット系 -->
+        <div class="menu-cat-panel" id="catPanel-cut">
+          <div class="menu-options">
+            <div class="menu-option" onclick="selectMenu(this,'カットセット')">
+              <div class="menu-name">✂ カットセット</div>
+              <div class="menu-price">¥4,200</div>
+              <div class="menu-desc">カット＋シャンプー＋顔そり＋仕上げ</div>
+            </div>
+            <div class="menu-option" onclick="selectMenu(this,'丸刈りセット')">
+              <div class="menu-name">✂ 丸刈りセット</div>
+              <div class="menu-price">¥3,900</div>
+              <div class="menu-desc">カット＋シャンプー＋顔そり＋仕上げ</div>
+            </div>
+            <div class="menu-option" onclick="selectMenu(this,'カットのみ')">
+              <div class="menu-name">✂ カットのみ</div>
+              <div class="menu-price">¥3,400</div>
+              <div class="menu-desc">カット＋シャンプー＋仕上げ</div>
+            </div>
+            <div class="menu-option" onclick="selectMenu(this,'丸刈りのみ')">
+              <div class="menu-name">✂ 丸刈りのみ</div>
+              <div class="menu-price">¥3,100</div>
+              <div class="menu-desc">カット＋シャンプー＋仕上げ</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- カテゴリ：カット＋パーマ・カラー -->
+        <div class="menu-cat-panel" id="catPanel-perm">
+          <div class="menu-options">
+            <div class="menu-option" onclick="selectMenu(this,'カラーカットセット')">
+              <div class="menu-name">🎨 カラーカットセット</div>
+              <div class="menu-price">¥7,400〜</div>
+              <div class="menu-desc">カット＋カラー＋シャンプー＋顔そり＋仕上げ</div>
+            </div>
+            <div class="menu-option" onclick="selectMenu(this,'パーマカットセット')">
+              <div class="menu-name">🌀 パーマカットセット</div>
+              <div class="menu-price">¥8,400〜</div>
+              <div class="menu-desc">カット＋パーマ＋シャンプー＋顔そり＋仕上げ</div>
+            </div>
+            <div class="menu-option" onclick="selectMenu(this,'アイロンパーマ')">
+              <div class="menu-name">🌀 アイロンパーマ</div>
+              <div class="menu-price">¥8,400〜</div>
+              <div class="menu-desc">パンチパーマ＋シャンプー＋顔そり＋仕上げ</div>
+            </div>
+            <div class="menu-option" onclick="selectMenu(this,'特殊パーマ')">
+              <div class="menu-name">💫 特殊パーマ</div>
+              <div class="menu-price">¥12,600〜</div>
+              <div class="menu-desc">ツイスト・スパイラルなど＋シャンプー＋顔そり＋仕上げ</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- カテゴリ：顔そり -->
+        <div class="menu-cat-panel" id="catPanel-face">
+          <div class="menu-options">
+            <div class="menu-option" onclick="selectMenu(this,'顔そり')">
+              <div class="menu-name">🪒 顔そり</div>
+              <div class="menu-price">¥2,500</div>
+              <div class="menu-desc">顔そりのみ</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- カテゴリ：その他・相談 -->
+        <div class="menu-cat-panel" id="catPanel-other">
+          <div class="menu-options">
+            <div class="menu-option" onclick="selectMenu(this,'その他・相談')">
+              <div class="menu-name">💬 その他・相談</div>
+              <div class="menu-price">要相談</div>
+              <div class="menu-desc">スタッフにご相談ください</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="menu-showall-link" onclick="showAllMenu()">すべてのメニューを見る ＞</div>
+      </div>
+
+      <!-- ── すべて見る：従来の全件一覧 ── -->
+      <div id="menuStepAll">
+        <div class="menu-back-link" onclick="backToMenuStep1()">＜ おすすめ・カテゴリに戻る</div>
+        <div class="menu-options">
         <div class="menu-option" onclick="selectMenu(this,'カットセット')">
           <div class="menu-name">✂ カットセット</div>
           <div class="menu-price">¥4,200</div>
@@ -404,7 +572,9 @@
           <div class="menu-price">要相談</div>
           <div class="menu-desc">スタッフにご相談ください</div>
         </div>
+        </div>
       </div>
+
       <div class="error-msg" id="err-menu" style="margin-top:8px;">メニューを選択してください</div>
     </div>
 
@@ -529,14 +699,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.54</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.55</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.54
+// バージョン: v3.55
 // 営業時間設定キャッシュ
 let _timeSlotsCache = {};  // { 'default': [...], '2026-06-01': [...] }
 let _timeSlotsCacheLoaded = false;
@@ -884,7 +1054,9 @@ function selectTime(el, timeStr) {
 // メニュー選択
 // ============================================================
 function selectMenu(el, menu) {
+  // 全メニューUI（おすすめカード／通常オプション）の選択状態をリセット
   document.querySelectorAll(".menu-option").forEach(m => m.classList.remove("selected"));
+  document.querySelectorAll(".menu-recommend-card").forEach(m => m.classList.remove("selected"));
   el.classList.add("selected");
   selectedMenu = menu;
   document.getElementById("err-menu").style.display = "none";
@@ -897,6 +1069,40 @@ function selectMenu(el, menu) {
     s.classList.remove("selected", "selected-next");
     s.removeAttribute("data-preview");
   });
+}
+
+// ============================================================
+// 3層メニュー：カテゴリタイル開閉（アコーディオン・v3.55）
+// ============================================================
+function toggleMenuCategory(cat) {
+  const targetPanel = document.getElementById("catPanel-" + cat);
+  const targetTile  = document.getElementById("catTile-" + cat);
+  const isOpen = targetPanel.classList.contains("open");
+
+  // 他のカテゴリは全て閉じる（同時に複数開かない）
+  document.querySelectorAll(".menu-cat-panel").forEach(p => p.classList.remove("open"));
+  document.querySelectorAll(".menu-cat-tile").forEach(t => t.classList.remove("open"));
+
+  if (!isOpen) {
+    targetPanel.classList.add("open");
+    targetTile.classList.add("open");
+    // 展開後にスクロールして見やすくする
+    setTimeout(() => {
+      targetPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 100);
+  }
+}
+
+// すべてのメニューを見る（層1→全件一覧）
+function showAllMenu() {
+  document.getElementById("menuStep1").style.display   = "none";
+  document.getElementById("menuStepAll").style.display = "block";
+}
+
+// おすすめ・カテゴリ表示に戻る
+function backToMenuStep1() {
+  document.getElementById("menuStepAll").style.display = "none";
+  document.getElementById("menuStep1").style.display   = "block";
 }
 
 // ============================================================
@@ -1562,7 +1768,12 @@ function resetForm() {
   selectedTime = "";
   selectedMenu = "";
   document.getElementById("timeSlots").innerHTML = "";
-  document.querySelectorAll(".menu-option").forEach(m => m.classList.remove("selected"));
+  document.querySelectorAll(".menu-option, .menu-recommend-card").forEach(m => m.classList.remove("selected"));
+  document.querySelectorAll(".menu-cat-panel").forEach(p => p.classList.remove("open"));
+  document.querySelectorAll(".menu-cat-tile").forEach(t => t.classList.remove("open"));
+  const menuStep1El = document.getElementById("menuStep1");
+  const menuStepAllEl = document.getElementById("menuStepAll");
+  if (menuStep1El && menuStepAllEl) { menuStep1El.style.display = "block"; menuStepAllEl.style.display = "none"; }
   document.getElementById("dayWarning").style.display = "none";
   document.getElementById("completeSection").style.display = "none";
   document.getElementById("formSection").style.display    = "block";
@@ -1878,19 +2089,52 @@ function proceedWithLastData() {
     // 名前・電話番号をフォームへ自動入力
     document.getElementById("guestName").value  = last.name  || "";
     document.getElementById("guestPhone").value = last.phone || "";
-    // メニューを自動選択
-    const menuOpts = document.querySelectorAll(".menu-option");
-    menuOpts.forEach(el => {
-      el.classList.remove("selected");
-      const nameEl = el.querySelector(".menu-name");
-      if (nameEl && nameEl.textContent.replace(/^[^\w\u3040-\u9fff]+/, "").trim() === last.menu.trim()) {
-        el.classList.add("selected");
-        selectedMenu = last.menu;
-        // エラー表示を消す
-        const err = document.getElementById("err-menu");
-        if (err) err.style.display = "none";
+
+    // ── メニューを自動選択（v3.55：3層構造対応） ──
+    const lastMenuName = last.menu.trim();
+    document.querySelectorAll(".menu-option, .menu-recommend-card").forEach(m => m.classList.remove("selected"));
+
+    // ① おすすめカードと一致するか
+    const recCard = document.querySelector(".menu-recommend-card");
+    const recNameEl = recCard ? recCard.querySelector(".menu-recommend-name") : null;
+    const recName = recNameEl ? recNameEl.textContent.replace(/^[^\w\u3040-\u9fff]+/, "").trim() : "";
+
+    if (recName === lastMenuName) {
+      recCard.classList.add("selected");
+      selectedMenu = lastMenuName;
+      const err = document.getElementById("err-menu");
+      if (err) err.style.display = "none";
+    } else {
+      // ② カテゴリ内メニューと一致するか（該当カテゴリを自動展開）
+      let matchedInCategory = false;
+      document.querySelectorAll("#menuStep1 .menu-cat-panel .menu-option").forEach(el => {
+        const nameEl = el.querySelector(".menu-name");
+        if (nameEl && nameEl.textContent.replace(/^[^\w\u3040-\u9fff]+/, "").trim() === lastMenuName) {
+          el.classList.add("selected");
+          selectedMenu = lastMenuName;
+          matchedInCategory = true;
+          const panel = el.closest(".menu-cat-panel");
+          const catId = panel.id.replace("catPanel-", "");
+          toggleMenuCategory(catId);
+          const err = document.getElementById("err-menu");
+          if (err) err.style.display = "none";
+        }
+      });
+      // ③ どこにも該当しなければ「すべて見る」内から選択して切り替え
+      if (!matchedInCategory) {
+        const allOpts = document.querySelectorAll("#menuStepAll .menu-option");
+        allOpts.forEach(el => {
+          const nameEl = el.querySelector(".menu-name");
+          if (nameEl && nameEl.textContent.replace(/^[^\w\u3040-\u9fff]+/, "").trim() === lastMenuName) {
+            el.classList.add("selected");
+            selectedMenu = lastMenuName;
+            showAllMenu();
+            const err = document.getElementById("err-menu");
+            if (err) err.style.display = "none";
+          }
+        });
       }
-    });
+    }
   }
   // 入口を隠して既存フロー表示（カレンダーまでスクロール）
   goNewFlow();
@@ -1900,6 +2144,7 @@ function proceedWithLastData() {
     if (dateEl) dateEl.scrollIntoView({ behavior: "smooth", block: "center" });
   }, 150);
 }
+
 
 // メニュー変更 → 通常フロー（formSection先頭へ）
 function changeMenu() {
