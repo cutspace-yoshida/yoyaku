@@ -699,14 +699,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.55</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.56</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.55
+// バージョン: v3.56
 // 営業時間設定キャッシュ
 let _timeSlotsCache = {};  // { 'default': [...], '2026-06-01': [...] }
 let _timeSlotsCacheLoaded = false;
@@ -1949,13 +1949,29 @@ function getTodayJST() {
 }
 
 // barberData_v1（管理システム）のnextDate予約をyoshida_reservationsに統合
+// ★v3.56: 管理システム側で日時が変更された際、統合済みの「古い日時」のエントリが
+// 削除されずに残り、予約ページ上で新旧どちらの枠も「予約済み（赤枠）」に
+// 表示され続けてしまうバグを修正。
+// 追加する前に、その人の「管理システム由来（submittedAtが空＝サイトからの
+// お客様自身の申込ではない）」かつ「今のnextDate/nextTimeと食い違う」古い
+// エントリを取り除いてから、最新の予約を追加するようにした。
 function mergeBarberDataToReservations() {
   try {
     const barberData = JSON.parse(localStorage.getItem("barberData_v1") || "{}");
-    const existing = JSON.parse(localStorage.getItem("yoshida_reservations") || "[]");
-    const merged = [...existing];
+    let merged = JSON.parse(localStorage.getItem("yoshida_reservations") || "[]");
+
     for (const name in barberData) {
       const cd = barberData[name];
+
+      // ★v3.56: この人について、管理システム由来（submittedAtが空）で、
+      // 現在のnextDate/nextTimeと一致しない古いエントリを先に取り除く
+      merged = merged.filter(r => {
+        if (r.name !== name || r.submittedAt !== "") return true; // 別人／お客様自身の申込は対象外
+        const matchesCurrent = cd.nextDate && cd.nextTime &&
+          r.date === cd.nextDate && normalizeTime(r.time) === normalizeTime(cd.nextTime);
+        return matchesCurrent; // 今の予約と一致するものだけ残す。それ以外（古い日時）は除去
+      });
+
       if (!cd.nextDate || !cd.nextTime) continue;
       // すでに同じ日時・名前の予約がある場合はスキップ
       const dup = merged.find(r => r.date === cd.nextDate && normalizeTime(r.time) === normalizeTime(cd.nextTime) && r.name === name);
