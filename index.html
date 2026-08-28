@@ -699,14 +699,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.56</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.57</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.56
+// バージョン: v3.57
 // 営業時間設定キャッシュ
 let _timeSlotsCache = {};  // { 'default': [...], '2026-06-01': [...] }
 let _timeSlotsCacheLoaded = false;
@@ -1752,6 +1752,14 @@ function adminCancel(idx) {
   if (!confirm(r.name + " 様 (" + r.date + " " + r.time + ") の予約をキャンセルしますか？")) return;
   list[idx].status = "キャンセル";
   localStorage.setItem("yoshida_reservations", JSON.stringify(list));
+
+  // ★v3.57: これまでスプレッドシート側への通知が抜けており、
+  // 次回のGAS同期で「キャンセルされていない」状態に復活してしまうバグを修正
+  try {
+    const params = new URLSearchParams({ action: "cancel", name: r.name, phone: r.phone || "", date: r.date, time: r.time });
+    fetch(SHOP_CONFIG.gasUrl, { method: "POST", body: params }).catch(e => console.warn("GASキャンセル通知エラー:", e));
+  } catch (e) { console.warn("GASキャンセル通知エラー:", e); }
+
   const el = document.getElementById("adminOverlay");
   if (el) el.remove();
   showAdminPage();
