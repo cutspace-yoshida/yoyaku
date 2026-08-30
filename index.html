@@ -33,6 +33,8 @@
   .header-inner { max-width: 720px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
   .shop-logo { font-family: "Oswald", sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--accent); letter-spacing: 2px; line-height: 1; }
   .shop-logo span { display: block; font-size: 0.6rem; color: rgba(255,255,255,0.5); letter-spacing: 3px; font-family: "Noto Sans JP", sans-serif; font-weight: 400; margin-top: 3px; }
+  /* ★v3.59: 店名本体(data-shop="shopNameEn")は、上のサブタイトル用span装飾を巻き込まないよう個別に上書きする */
+  .shop-logo span[data-shop="shopNameEn"] { display: inline; font-size: 1.4rem; font-weight: 700; color: var(--accent); letter-spacing: 2px; font-family: "Oswald", sans-serif; margin-top: 0; }
   .header-badge { background: var(--accent); color: var(--primary); font-size: 0.7rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; letter-spacing: 1px; }
 
   /* ヒーロー */
@@ -269,7 +271,7 @@
 
 <header class="site-header">
   <div class="header-inner">
-    <div class="shop-logo">CUT-SPACE YOSHIDA<span>BARBER SHOP</span></div>
+    <div class="shop-logo"><span data-shop="shopNameEn" style="display:inline;">CUT-SPACE YOSHIDA</span><span data-shop="shopTagline">BARBER SHOP</span></div>
 
   </div>
 </header>
@@ -279,8 +281,8 @@
   <div class="hero-sub">24時間・いつでも簡単予約</div>
   <div class="hero-info">
     <span id="closedDayLabel">📅 定休日：毎週火曜日・第2・第3月曜日</span>
-    <span>🕐 8:00 〜 18:00</span>
-    <span><a href="tel:0298874213" style="color:var(--accent); text-decoration:none; font-weight:700;">📞 029-887-4213</a></span>
+    <span id="businessHoursLabel">🕐 8:00 〜 18:00</span>
+    <span><a href="tel:0298874213" data-shop-tel="text" style="color:var(--accent); text-decoration:none; font-weight:700;">📞 029-887-4213</a></span>
   </div>
 </div>
 
@@ -288,7 +290,7 @@
 <div id="sameDayNotice" style="margin:16px auto; max-width:560px; background:linear-gradient(135deg,#fff8e8,#fef3c7); border:2px solid #e08a2e; border-radius:16px; box-shadow:0 4px 16px rgba(224,138,46,0.28); padding:16px 20px; text-align:center; letter-spacing:0.3px;">
   <div style="font-weight:900; font-size:0.95rem; color:#a85a00; margin-bottom:8px;"><span id="sameDayNoticeIcon" style="display:inline-block;">📞</span> 当日のご予約はお電話にて承っております</div>
   <div style="font-size:0.82rem; color:#7a5a00; margin-bottom:10px; line-height:1.7;">ネット予約は<span style="display:inline-block; background:#e08a2e; color:#fff; font-weight:900; padding:2px 14px; border-radius:20px; margin:2px 3px; letter-spacing:1px;">翌日以降</span>のみ受け付けております。当日ご来店希望の方はお気軽にお電話ください。</div>
-  <a href="tel:0298874213" style="display:inline-block; background:linear-gradient(135deg,#d9480f,#c0392b); color:white; text-decoration:none; font-size:1rem; font-weight:900; padding:9px 26px; border-radius:30px; letter-spacing:1px; box-shadow:0 3px 10px rgba(192,57,43,0.4);">📞 029-887-4213</a>
+  <a href="tel:0298874213" data-shop-tel="text" style="display:inline-block; background:linear-gradient(135deg,#d9480f,#c0392b); color:white; text-decoration:none; font-size:1rem; font-weight:900; padding:9px 26px; border-radius:30px; letter-spacing:1px; box-shadow:0 3px 10px rgba(192,57,43,0.4);">📞 029-887-4213</a>
 </div>
 <style>
   @keyframes sameDayNoticePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
@@ -347,7 +349,7 @@
         <label style="font-size:0.8rem; color:var(--muted); font-weight:600; display:block; margin-bottom:6px;">ご希望時間 <span style="color:#e74c3c; font-size:0.75rem;">※必須</span></label>
         <div id="previewTodayNotice" style="display:none; background:#fdecea; border:1px solid #f1948a; border-radius:10px; padding:10px 14px; font-size:0.8rem; color:#c0392b; font-weight:700; margin-bottom:8px;">
           ⚠️ 当日はネット予約できません。以下は予約状況の<strong>確認のみ</strong>です。<br>
-          ご予約はお電話にて：<a href="tel:0298874213" style="color:#c0392b; text-decoration:none; font-weight:900;">029-887-4213</a>
+          ご予約はお電話にて：<a href="tel:0298874213" data-shop-tel="text" style="color:#c0392b; text-decoration:none; font-weight:900;">029-887-4213</a>
         </div>
         <div class="time-slots" id="previewTimeSlots" style="min-height:60px;">
           <div style="color:var(--muted); font-size:0.82rem; padding:16px 0; text-align:center;">日付を選択すると空き状況が表示されます</div>
@@ -594,9 +596,9 @@
           <strong style="display:block; margin-bottom:4px;">📅 ネット予約は「翌日以降」のみ受け付けております</strong>
           当日のご予約・お問い合わせはお電話にてお承りしております。<br>
           下のカレンダーで当日を選択した場合は<strong>閲覧のみ</strong>となり、予約はできません。<br>
-          <span style="margin-top:6px; display:inline-block;">📞 お気軽にお電話ください：<a href="tel:0298874213" style="color:#c07000; font-weight:900; font-size:0.95rem; text-decoration:none;">029-887-4213</a></span>
+          <span style="margin-top:6px; display:inline-block;">📞 お気軽にお電話ください：<a href="tel:0298874213" data-shop-tel="text" style="color:#c07000; font-weight:900; font-size:0.95rem; text-decoration:none;">029-887-4213</a></span>
         </div>
-        <div id="todayNotice" style="display:none; background:#fdecea; border:1px solid #f1948a; border-radius:10px; padding:10px 14px; font-size:0.82rem; color:#c0392b; font-weight:700; margin-bottom:8px;">⚠️ 当日はネット予約できません。以下は予約状況の<strong>確認のみ</strong>です。<br>ご予約はお電話にて：<a href="tel:0298874213" style="color:#c0392b; text-decoration:none; font-weight:900;">029-887-4213</a></div>
+        <div id="todayNotice" style="display:none; background:#fdecea; border:1px solid #f1948a; border-radius:10px; padding:10px 14px; font-size:0.82rem; color:#c0392b; font-weight:700; margin-bottom:8px;">⚠️ 当日はネット予約できません。以下は予約状況の<strong>確認のみ</strong>です。<br>ご予約はお電話にて：<a href="tel:0298874213" data-shop-tel="text" style="color:#c0392b; text-decoration:none; font-weight:900;">029-887-4213</a></div>
         <div class="time-slots" id="timeSlots"></div>
         <div class="slot-legend">
           <div class="legend-item"><div class="legend-dot ok"></div>予約可</div>
@@ -697,21 +699,29 @@
 <footer class="site-footer">
   <strong>CUT-SPACE YOSHIDA</strong> &nbsp;|&nbsp; ネット予約システム<br>
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
-  <a href="tel:0298874213" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
+  <a href="tel:0298874213" data-shop-tel="text" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.57</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.60</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.57
+// バージョン: v3.60
 // 営業時間設定キャッシュ
 let _timeSlotsCache = {};  // { 'default': [...], '2026-06-01': [...] }
 let _timeSlotsCacheLoaded = false;
 
 const SHOP_CONFIG = {
+  // ★v3.58: 店舗設定の外部化。他店舗への販売時は、基本的にこのブロックの値を
+  // 書き換えるだけで対応できるようにする（HTML側の表記はapplyShopConfig()が自動反映する）
+  shopNameEn:   "CUT-SPACE YOSHIDA",
+  shopNameJa:   "カットスペース ヨシダ",
+  shopTagline:  "BARBER SHOP",
+  address:      "茨城県稲敷郡阿見町島津",
+  phone:        "029-887-4213",
+  phoneTel:     "0298874213", // tel:リンク用（ハイフン無し）
   // 毎週定休日: 2=火曜
   weeklyClosedDays: [2],
   // 月曜の第N週定休（例: [2,3] = 第2・第3月曜）
@@ -725,6 +735,64 @@ const SHOP_CONFIG = {
   // ★ Googleスプレッドシート GAS URL（後でセット）
   gasUrl: "https://script.google.com/macros/s/AKfycbxDydHuPRed66zp-LmBhTFNYZ8LLKlEYPcjZHxFDuRda0-_tG5D18U8CHs5UsGETpsUQA/exec"
 };
+
+// ★v3.60: 管理システム側の「⚙️店舗設定」で保存された内容（shopConfig_v1）があれば、
+// 上の初期値の上に上書きする。管理システムと同じブラウザ・同じlocalStorageを
+// 共有しているため、管理システムで1回設定するだけでこちらにも自動反映される。
+// isClosedDay()等、SHOP_CONFIGを参照する後続コードより必ず先に実行する必要があるため、
+// SHOP_CONFIG定義の直後に置く。
+(function loadShopConfigOverrides() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("shopConfig_v1") || "null");
+    if (!saved) return;
+    if (saved.shopNameEn) SHOP_CONFIG.shopNameEn = saved.shopNameEn;
+    if (saved.shopNameJa) SHOP_CONFIG.shopNameJa = saved.shopNameJa;
+    if (saved.address)    SHOP_CONFIG.address    = saved.address;
+    if (saved.phone) {
+      SHOP_CONFIG.phone    = saved.phone;
+      SHOP_CONFIG.phoneTel = saved.phone.replace(/[^0-9]/g, ""); // tel:リンク用にハイフン除去
+    }
+    if (Array.isArray(saved.weeklyClosedDays))     SHOP_CONFIG.weeklyClosedDays     = saved.weeklyClosedDays;
+    if (Array.isArray(saved.monthlyClosedMondays)) SHOP_CONFIG.monthlyClosedMondays = saved.monthlyClosedMondays;
+    if (typeof saved.openHour === "number")  SHOP_CONFIG.openHour  = saved.openHour;
+    if (typeof saved.closeHour === "number") {
+      SHOP_CONFIG.closeHour    = saved.closeHour;
+      SHOP_CONFIG.lastBookHour = saved.closeHour; // ラスト受付＝営業終了時刻に揃える
+    }
+    if (saved.reservationGasUrl) SHOP_CONFIG.gasUrl = saved.reservationGasUrl;
+  } catch (e) { console.warn("店舗設定の読み込みに失敗しました:", e); }
+})();
+
+// ============================================================
+// ★v3.58: SHOP_CONFIGの内容を、HTML内の該当箇所へ自動反映する
+// data-shop="xxx" を付けた要素のテキストを書き換え、
+// data-shop-tel を付けた<a>要素はhref(tel:)も書き換える
+// ============================================================
+function applyShopConfig() {
+  document.querySelectorAll('[data-shop]').forEach(el => {
+    const key = el.getAttribute('data-shop');
+    if (SHOP_CONFIG[key] !== undefined) el.textContent = SHOP_CONFIG[key];
+  });
+  document.querySelectorAll('[data-shop-tel]').forEach(el => {
+    el.setAttribute('href', 'tel:' + SHOP_CONFIG.phoneTel);
+    if (el.getAttribute('data-shop-tel') === 'text') {
+      el.textContent = el.textContent.replace(/[\d\-]{10,}/, SHOP_CONFIG.phone);
+    }
+  });
+  document.title = document.title.replace('CUT-SPACE YOSHIDA', SHOP_CONFIG.shopNameEn);
+
+  // ★v3.58: 定休日ラベル・営業時間表示もSHOP_CONFIGから自動生成する
+  const DOW_JA = ['日','月','火','水','木','金','土'];
+  const weeklyLabel = SHOP_CONFIG.weeklyClosedDays.map(d => '毎週' + DOW_JA[d] + '曜日').join('・');
+  const mondayLabel = SHOP_CONFIG.monthlyClosedMondays.length
+    ? SHOP_CONFIG.monthlyClosedMondays.map(n => '第' + n).join('・') + '月曜日' : '';
+  const closedLabelEl = document.getElementById('closedDayLabel');
+  if (closedLabelEl) closedLabelEl.textContent = '📅 定休日：' + [weeklyLabel, mondayLabel].filter(Boolean).join('・');
+
+  const hoursEl = document.getElementById('businessHoursLabel');
+  if (hoursEl) hoursEl.textContent = `🕐 ${SHOP_CONFIG.openHour}:00 〜 ${SHOP_CONFIG.closeHour}:00`;
+}
+document.addEventListener('DOMContentLoaded', applyShopConfig);
 
 // ============================================================
 // 定休日判定（毎週火曜 ＋ 第2・第3月曜）
@@ -1116,7 +1184,7 @@ function goToConfirm() {
   // 当日予約は電話のみ → 送信ブロック（getTodayJST()でJST基準）
   const _todayStr = getTodayJST();
   if (date === _todayStr && !isTodayBookable()) {
-    alert("当日のご予約はお電話にてお承りしております。\n📞 029-887-4213\nお気軽にご連絡ください。");
+    alert("当日のご予約はお電話にてお承りしております。\n📞 " + SHOP_CONFIG.phone + "\nお気軽にご連絡ください。");
     return;
   }
 
@@ -1208,7 +1276,7 @@ async function submitReservation() {
   // 当日予約は電話のみ → 送信ブロック（getTodayJST()でJST基準）
   const _todayStr = getTodayJST();
   if (date === _todayStr && !isTodayBookable()) {
-    alert("当日のご予約はお電話にてお承りしております。\n📞 029-887-4213\nお気軽にご連絡ください。");
+    alert("当日のご予約はお電話にてお承りしております。\n📞 " + SHOP_CONFIG.phone + "\nお気軽にご連絡ください。");
     return;
   }
   const note  = document.getElementById("guestNote").value.trim();
