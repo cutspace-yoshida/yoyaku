@@ -424,98 +424,9 @@
         </div>
 
         <div class="menu-cat-label">カテゴリからお選びください</div>
-        <div class="menu-cat-grid">
-          <div class="menu-cat-tile" id="catTile-cut" onclick="toggleMenuCategory('cut')">
-            <div class="menu-cat-icon">✂</div>
-            <div class="menu-cat-name">カット系</div>
-          </div>
-          <div class="menu-cat-tile" id="catTile-perm" onclick="toggleMenuCategory('perm')">
-            <div class="menu-cat-icon">🎨</div>
-            <div class="menu-cat-name">カット＋<br>パーマ・カラー</div>
-          </div>
-          <div class="menu-cat-tile" id="catTile-face" onclick="toggleMenuCategory('face')">
-            <div class="menu-cat-icon">🪒</div>
-            <div class="menu-cat-name">顔そり</div>
-          </div>
-          <div class="menu-cat-tile muted" id="catTile-other" onclick="toggleMenuCategory('other')">
-            <div class="menu-cat-icon">💬</div>
-            <div class="menu-cat-name">その他・相談</div>
-          </div>
-        </div>
+        <div class="menu-cat-grid" id="menuCatGrid"><!-- ★v3.61: renderMenuCategories()でSHOP_CONFIGから自動生成 --></div>
 
-        <!-- カテゴリ：カット系 -->
-        <div class="menu-cat-panel" id="catPanel-cut">
-          <div class="menu-options">
-            <div class="menu-option" onclick="selectMenu(this,'カットセット')">
-              <div class="menu-name">✂ カットセット</div>
-              <div class="menu-price">¥4,200</div>
-              <div class="menu-desc">カット＋シャンプー＋顔そり＋仕上げ</div>
-            </div>
-            <div class="menu-option" onclick="selectMenu(this,'丸刈りセット')">
-              <div class="menu-name">✂ 丸刈りセット</div>
-              <div class="menu-price">¥3,900</div>
-              <div class="menu-desc">カット＋シャンプー＋顔そり＋仕上げ</div>
-            </div>
-            <div class="menu-option" onclick="selectMenu(this,'カットのみ')">
-              <div class="menu-name">✂ カットのみ</div>
-              <div class="menu-price">¥3,400</div>
-              <div class="menu-desc">カット＋シャンプー＋仕上げ</div>
-            </div>
-            <div class="menu-option" onclick="selectMenu(this,'丸刈りのみ')">
-              <div class="menu-name">✂ 丸刈りのみ</div>
-              <div class="menu-price">¥3,100</div>
-              <div class="menu-desc">カット＋シャンプー＋仕上げ</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- カテゴリ：カット＋パーマ・カラー -->
-        <div class="menu-cat-panel" id="catPanel-perm">
-          <div class="menu-options">
-            <div class="menu-option" onclick="selectMenu(this,'カラーカットセット')">
-              <div class="menu-name">🎨 カラーカットセット</div>
-              <div class="menu-price">¥7,400〜</div>
-              <div class="menu-desc">カット＋カラー＋シャンプー＋顔そり＋仕上げ</div>
-            </div>
-            <div class="menu-option" onclick="selectMenu(this,'パーマカットセット')">
-              <div class="menu-name">🌀 パーマカットセット</div>
-              <div class="menu-price">¥8,400〜</div>
-              <div class="menu-desc">カット＋パーマ＋シャンプー＋顔そり＋仕上げ</div>
-            </div>
-            <div class="menu-option" onclick="selectMenu(this,'アイロンパーマ')">
-              <div class="menu-name">🌀 アイロンパーマ</div>
-              <div class="menu-price">¥8,400〜</div>
-              <div class="menu-desc">パンチパーマ＋シャンプー＋顔そり＋仕上げ</div>
-            </div>
-            <div class="menu-option" onclick="selectMenu(this,'特殊パーマ')">
-              <div class="menu-name">💫 特殊パーマ</div>
-              <div class="menu-price">¥12,600〜</div>
-              <div class="menu-desc">ツイスト・スパイラルなど＋シャンプー＋顔そり＋仕上げ</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- カテゴリ：顔そり -->
-        <div class="menu-cat-panel" id="catPanel-face">
-          <div class="menu-options">
-            <div class="menu-option" onclick="selectMenu(this,'顔そり')">
-              <div class="menu-name">🪒 顔そり</div>
-              <div class="menu-price">¥2,500</div>
-              <div class="menu-desc">顔そりのみ</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- カテゴリ：その他・相談 -->
-        <div class="menu-cat-panel" id="catPanel-other">
-          <div class="menu-options">
-            <div class="menu-option" onclick="selectMenu(this,'その他・相談')">
-              <div class="menu-name">💬 その他・相談</div>
-              <div class="menu-price">要相談</div>
-              <div class="menu-desc">スタッフにご相談ください</div>
-            </div>
-          </div>
-        </div>
+        <div id="menuCatPanels"><!-- ★v3.61: renderMenuCategories()でSHOP_CONFIGから自動生成 --></div>
 
         <div class="menu-showall-link" onclick="showAllMenu()">すべてのメニューを見る ＞</div>
       </div>
@@ -701,14 +612,14 @@
   <span style="font-size:0.7rem;">ご不明な点はお電話にてお問い合わせください</span><br>
   <a href="tel:0298874213" data-shop-tel="text" style="font-size:0.88rem; color:var(--accent); font-weight:700; letter-spacing:1px; text-decoration:none;">📞 029-887-4213</a><br>
   <button onclick="showAdminPage()" style="margin-top:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.4); border-radius:20px; padding:4px 14px; font-size:0.68rem; cursor:pointer; font-family:inherit;">🔐 管理</button><br>
-  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.60</span>
+  <span style="font-size:0.6rem; color:rgba(255,255,255,0.2); margin-top:6px; display:inline-block; letter-spacing:0.5px;">v3.61</span>
 </footer>
 
 <script>
 // ============================================================
 // ★ お店設定（ここを変更してください）
 // ============================================================
-// バージョン: v3.60
+// バージョン: v3.61
 // 営業時間設定キャッシュ
 let _timeSlotsCache = {};  // { 'default': [...], '2026-06-01': [...] }
 let _timeSlotsCacheLoaded = false;
@@ -733,7 +644,28 @@ const SHOP_CONFIG = {
   slotMinutes:  30,    // スロット単位（分）
   serviceMins:  60,    // 施術時間（分）→ この間ブロック
   // ★ Googleスプレッドシート GAS URL（後でセット）
-  gasUrl: "https://script.google.com/macros/s/AKfycbxDydHuPRed66zp-LmBhTFNYZ8LLKlEYPcjZHxFDuRda0-_tG5D18U8CHs5UsGETpsUQA/exec"
+  gasUrl: "https://script.google.com/macros/s/AKfycbxDydHuPRed66zp-LmBhTFNYZ8LLKlEYPcjZHxFDuRda0-_tG5D18U8CHs5UsGETpsUQA/exec",
+  // ★v3.61: カテゴリ別メニュー（層1〜2のタイル）。管理システムの「⚙️店舗設定」から編集可能
+  menuCategories: [
+    { key: 'cut', icon: '✂', name: 'カット系', items: [
+      { name: 'カットセット',   icon: '✂', priceLabel: '¥4,200',  desc: 'カット＋シャンプー＋顔そり＋仕上げ' },
+      { name: '丸刈りセット',   icon: '✂', priceLabel: '¥3,900',  desc: 'カット＋シャンプー＋顔そり＋仕上げ' },
+      { name: 'カットのみ',     icon: '✂', priceLabel: '¥3,400',  desc: 'カット＋シャンプー＋仕上げ' },
+      { name: '丸刈りのみ',     icon: '✂', priceLabel: '¥3,100',  desc: 'カット＋シャンプー＋仕上げ' }
+    ]},
+    { key: 'perm', icon: '🎨', name: 'カット＋<br>パーマ・カラー', items: [
+      { name: 'カラーカットセット', icon: '🎨', priceLabel: '¥7,400〜',  desc: 'カット＋カラー＋シャンプー＋顔そり＋仕上げ' },
+      { name: 'パーマカットセット', icon: '🌀', priceLabel: '¥8,400〜',  desc: 'カット＋パーマ＋シャンプー＋顔そり＋仕上げ' },
+      { name: 'アイロンパーマ',     icon: '🌀', priceLabel: '¥8,400〜',  desc: 'パンチパーマ＋シャンプー＋顔そり＋仕上げ' },
+      { name: '特殊パーマ',         icon: '💫', priceLabel: '¥12,600〜', desc: 'ツイスト・スパイラルなど＋シャンプー＋顔そり＋仕上げ' }
+    ]},
+    { key: 'face', icon: '🪒', name: '顔そり', items: [
+      { name: '顔そり', icon: '🪒', priceLabel: '¥2,500', desc: '顔そりのみ' }
+    ]},
+    { key: 'other', icon: '💬', name: 'その他・相談', muted: true, items: [
+      { name: 'その他・相談', icon: '💬', priceLabel: '要相談', desc: 'スタッフにご相談ください' }
+    ]}
+  ]
 };
 
 // ★v3.60: 管理システム側の「⚙️店舗設定」で保存された内容（shopConfig_v1）があれば、
@@ -760,6 +692,7 @@ const SHOP_CONFIG = {
       SHOP_CONFIG.lastBookHour = saved.closeHour; // ラスト受付＝営業終了時刻に揃える
     }
     if (saved.reservationGasUrl) SHOP_CONFIG.gasUrl = saved.reservationGasUrl;
+    if (Array.isArray(saved.menuCategories)) SHOP_CONFIG.menuCategories = saved.menuCategories; // ★v3.61
   } catch (e) { console.warn("店舗設定の読み込みに失敗しました:", e); }
 })();
 
@@ -1138,6 +1071,37 @@ function selectMenu(el, menu) {
     s.removeAttribute("data-preview");
   });
 }
+
+// ============================================================
+// ★v3.61: カテゴリ別メニュー（層1〜2）をSHOP_CONFIG.menuCategoriesから動的生成
+// ============================================================
+function renderMenuCategories() {
+  const gridEl = document.getElementById("menuCatGrid");
+  const panelsEl = document.getElementById("menuCatPanels");
+  if (!gridEl || !panelsEl) return;
+
+  gridEl.innerHTML = SHOP_CONFIG.menuCategories.map(cat => `
+    <div class="menu-cat-tile${cat.muted ? ' muted' : ''}" id="catTile-${cat.key}" onclick="toggleMenuCategory('${cat.key}')">
+      <div class="menu-cat-icon">${cat.icon}</div>
+      <div class="menu-cat-name">${cat.name}</div>
+    </div>
+  `).join("");
+
+  panelsEl.innerHTML = SHOP_CONFIG.menuCategories.map(cat => `
+    <div class="menu-cat-panel" id="catPanel-${cat.key}">
+      <div class="menu-options">
+        ${cat.items.map(item => `
+          <div class="menu-option" onclick="selectMenu(this,'${item.name.replace(/'/g, "\\'")}')">
+            <div class="menu-name">${item.icon} ${item.name}</div>
+            <div class="menu-price">${item.priceLabel}</div>
+            <div class="menu-desc">${item.desc}</div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `).join("");
+}
+document.addEventListener("DOMContentLoaded", renderMenuCategories);
 
 // ============================================================
 // 3層メニュー：カテゴリタイル開閉（アコーディオン・v3.55）
